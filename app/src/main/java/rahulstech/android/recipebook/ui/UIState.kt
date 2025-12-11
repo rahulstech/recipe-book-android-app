@@ -1,6 +1,6 @@
 package rahulstech.android.recipebook.ui
 
-sealed interface UIState<T> {
+sealed interface UIState<out T> {
 
     class Loading(): UIState<Nothing>
 
