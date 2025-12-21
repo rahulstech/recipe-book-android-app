@@ -1,55 +1,39 @@
-package rahulstech.android.recipebook.ui
+package rahulstech.android.recipebook.ui.screen
 
-import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -67,7 +50,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -75,13 +57,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import rahulstech.android.dailyquotes.ui.theme.RecipeBookTheme
-import rahulstech.android.recipebook.ACTION_EDIT
-import rahulstech.android.recipebook.ARG_ACTION
-import rahulstech.android.recipebook.ARG_ID
 import rahulstech.android.recipebook.R
+import rahulstech.android.recipebook.SnackBarCallback
+import rahulstech.android.recipebook.SnackBarEvent
+import rahulstech.android.recipebook.TopBackCallback
+import rahulstech.android.recipebook.TopBarState
 import rahulstech.android.recipebook.repository.Repositories
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
+import rahulstech.android.recipebook.ui.UIState
 
 class ViewRecipeViewModel: ViewModel() {
 
@@ -127,140 +111,108 @@ class ViewRecipeViewModel: ViewModel() {
     }
 }
 
-class ViewRecipeActivity: ComponentActivity() {
-
-    val viewModel by viewModels<ViewRecipeViewModel>()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val id = intent.extras?.getString(ARG_ID) ?: ""
-
-        enableEdgeToEdge()
-        setContent {
-            RecipeBookTheme {
-                ViewRecipeRoute(
-                    id = id,
-                    viewModel = viewModel,
-                    onEditRecipeClick = { recipe ->
-                        startActivity(
-                            Intent(
-                                this@ViewRecipeActivity,
-                                InputRecipeActivity::class.java
-                            ).apply {
-                                putExtra(ARG_ACTION, ACTION_EDIT)
-                                putExtra(ARG_ID, id)
-                        })
-                    }
-                )
-            }
-        }
-
-        lifecycleScope.launch {
-            viewModel.deleteRecipeState.collectLatest { state ->
-                when(state) {
-                    is UIState.Success<Recipe> -> {
-                        Toast.makeText(this@ViewRecipeActivity, "${state.data.title} delete", Toast.LENGTH_LONG).show()
-                        finish()
-                    }
-                    else -> {}
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun ViewRecipeRoute(id: String,
-                    viewModel: ViewRecipeViewModel,
-                    onEditRecipeClick: (Recipe)-> Unit) {
+                    onEditRecipeClick: (Recipe)-> Unit,
+                    performExit: ()-> Unit,
+                    updateTopBar: TopBackCallback,
+                    showSnackBar: SnackBarCallback) {
+
+    val viewModel = viewModel<ViewRecipeViewModel>()
+    var showDeleteWarningDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(id) {
         viewModel.findRecipeById(id)
     }
 
+    val deleteState by viewModel.deleteRecipeState.collectAsStateWithLifecycle(UIState.Idle())
+    when(deleteState) {
+        is UIState.Success<Recipe> -> {
+            val recipe = (deleteState as UIState.Success<Recipe>).data
+            showSnackBar(
+                SnackBarEvent(
+                    message = stringResource(R.string.message_recipe_delete_successful, recipe.title),
+                )
+            )
+            performExit()
+        }
+        else -> {}
+    }
+
     val recipeState by viewModel.recipeState.collectAsStateWithLifecycle()
 
-    ViewRecipeScreen(
-        recipeState = recipeState,
-        onEditRecipeClick = onEditRecipeClick,
-        onDeleteRecipeClick = { recipe ->
-            viewModel.removeRecipe(recipe)
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ViewRecipeScreen(
-    recipeState: UIState<Recipe>,
-    onEditRecipeClick: (Recipe) -> Unit,
-    onDeleteRecipeClick: (Recipe) -> Unit,
-) {
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                actions = {
+    updateTopBar(
+        TopBarState(
+            title = stringResource(R.string.app_title_view_recipe),
+            actions = {
+                if (recipeState is UIState.Success<Recipe>) {
 
                     // edit recipe
-                    IconButton (
-                        enabled = recipeState is UIState.Success<Recipe>,
+                    TextButton (
                         onClick = {
-                            if (recipeState is UIState.Success<Recipe>) {
-                                onEditRecipeClick(recipeState.data)
-                            }
+                            onEditRecipeClick((recipeState as UIState.Success<Recipe>).data)
                         },
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit recipe"
-                        )
+                        Text(stringResource(R.string.label_edit))
                     }
 
                     // delete recipe
-                    IconButton (
-                        enabled = recipeState is UIState.Success<Recipe>,
+                    TextButton (
                         onClick = {
-                            if (recipeState is UIState.Success<Recipe>) {
-                                onDeleteRecipeClick(recipeState.data)
-                            }
+                            showDeleteWarningDialog = true
                         },
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete recipe"
-                        )
+                        Text(stringResource(R.string.label_delete))
                     }
                 }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier.padding(innerPadding).fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            when(recipeState) {
-                is UIState.Success<Recipe> -> RecipeContentScreen(recipeState.data)
-                else -> {}
+            }
+        )
+    )
+
+    when(recipeState) {
+        is UIState.Success<Recipe> -> {
+            val recipe = (recipeState as UIState.Success<Recipe>).data
+            RecipeContentScreen(recipe  = recipe)
+
+            if (showDeleteWarningDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteWarningDialog = false },
+                    title = { Text(stringResource(R.string.title_delete_recipe_warning)) },
+                    text = { Text(stringResource(R.string.message_delete_recipe_warning, recipe.title)) },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteWarningDialog = false
+                                viewModel.removeRecipe(recipe)
+                            }
+                        ) {
+                            Text(stringResource(R.string.label_yes))
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteWarningDialog = false
+                            }
+                        ) {
+                            Text(stringResource(R.string.label_yes))
+                        }
+                    }
+                )
             }
         }
+        else -> {}
     }
 }
-
 
 @Composable
 fun RecipeContentScreen(
     recipe: Recipe,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-
     Column(
         modifier = modifier
             .padding(16.dp)
-            .widthIn(max = context.resources.getInteger(R.integer.max_content_width).dp).fillMaxHeight()
             .verticalScroll(rememberScrollState()),
     ) {
 
@@ -290,7 +242,7 @@ fun RecipeContentScreen(
             if (recipe.ingredients.isNotBlank()) {
                 Spacer(modifier = Modifier.height(24.dp))
                 RecipeSection(
-                    title = "Ingredients",
+                    title = stringResource(R.string.label_recipe_ingredients),
                     content = recipe.ingredients
                 )
             }
@@ -298,7 +250,7 @@ fun RecipeContentScreen(
             if (recipe.steps.isNotBlank()) {
                 Spacer(modifier = Modifier.height(24.dp))
                 RecipeSection(
-                    title = "Directions",
+                    title = stringResource(R.string.label_recipe_steps),
                     content = recipe.steps
                 )
             }
@@ -352,29 +304,18 @@ fun RecipeMediaSection(
     medias: List<RecipeMedia>,
     onMediaClick: (RecipeMedia) -> Unit
 ) {
-    Column {
-        Text(
-            text = "Photos",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(
-                items = medias,
-                key = { it.id }
-            ) { media ->
-                RecipeMediaItem(
-                    media = media,
-                    onClick = { onMediaClick(media) }
-                )
-            }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(
+            items = medias,
+            key = { it.id }
+        ) { media ->
+            RecipeMediaItem(
+                media = media,
+                onClick = { onMediaClick(media) }
+            )
         }
     }
 }
@@ -435,7 +376,8 @@ fun RecipeSection(
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(16.dp)
-            ),
+            )
+            .padding(16.dp),
     ) {
 
         Text(
@@ -447,7 +389,6 @@ fun RecipeSection(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            modifier = Modifier.padding(8.dp),
             text = content,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -480,10 +421,8 @@ fun ViewRecipeScreenPreview() {
                 "6. step 6 of recipe 4\n",
     )
     RecipeBookTheme {
-        ViewRecipeScreen(
-            recipeState = UIState.Success(recipe),
-            onEditRecipeClick = {},
-            onDeleteRecipeClick = {}
+        RecipeContentScreen(
+            recipe = recipe
         )
     }
 }

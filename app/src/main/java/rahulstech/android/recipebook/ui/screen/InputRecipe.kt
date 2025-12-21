@@ -1,14 +1,9 @@
-package rahulstech.android.recipebook.ui
+package rahulstech.android.recipebook.ui.screen
 
 import android.net.Uri
-import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -21,13 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -41,10 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +51,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,31 +61,30 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import rahulstech.android.dailyquotes.ui.theme.RecipeBookTheme
-import rahulstech.android.recipebook.ACTION_CREATE
-import rahulstech.android.recipebook.ACTION_EDIT
-import rahulstech.android.recipebook.ARG_ACTION
-import rahulstech.android.recipebook.ARG_ID
 import rahulstech.android.recipebook.R
+import rahulstech.android.recipebook.SnackBarCallback
+import rahulstech.android.recipebook.SnackBarEvent
+import rahulstech.android.recipebook.TopBackCallback
+import rahulstech.android.recipebook.TopBarState
 import rahulstech.android.recipebook.repository.Repositories
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
+import rahulstech.android.recipebook.ui.UIState
 
 private const val MAX_RECIPE_MEDIAS = 10
+private const val TAG = "InputRecipe"
 
 class InputRecipeViewModel: ViewModel() {
 
@@ -169,237 +160,121 @@ class InputRecipeViewModel: ViewModel() {
     }
 }
 
-
-class InputRecipeActivity: ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            RecipeBookTheme {
-                val action = intent.getStringExtra(ARG_ACTION) ?: ACTION_CREATE
-                when(action) {
-                    ACTION_CREATE -> CreateRecipeRoute()
-                    ACTION_EDIT -> {
-                        val id = intent.getStringExtra(ARG_ID) ?: ""
-                        EditRecipeRout(id)
-                    }
-                }
-            }
-        }
-    }
-}
-
 @Composable
-fun CreateRecipeRoute() {
-    val viewModel = viewModel<InputRecipeViewModel>()
+private fun HandleRecipeSaveState(viewModel: InputRecipeViewModel,
+                                  showSnackBar: SnackBarCallback,
+                                  performExit: ()-> Unit) {
     val context = LocalContext.current
 
-//    var coverPhoto by rememberSaveable { mutableStateOf<Uri?>(null) }
-//    var showCoverPhotoDialog by remember { mutableStateOf(false) }
-//
-//    val pickCoverPhotoLauncher =
-//        rememberLauncherForActivityResult(
-//            contract = ActivityResultContracts.GetContent()
-//        ) { uri: Uri? ->
-//            // IMPORTANT: only update if user actually picked something
-//            if (uri != null) {
-//                coverPhoto = uri
-//            }
-//        }
-//
-//    val medias = rememberSaveable { mutableStateListOf<RecipeMediaParcelable>() }
-//    var selectedMedia by remember { mutableStateOf<RecipeMediaParcelable?>(null) }
-//
-//    val pickMediaLauncher =
-//        rememberLauncherForActivityResult(
-//            contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = MAX_RECIPE_MEDIAS)
-//        ) { uris ->
-//            val allowed = MAX_RECIPE_MEDIAS - medias.size
-//            uris.take(allowed).forEach { uri ->
-//                medias.add(RecipeMediaParcelable(data = uri))
-//            }
-//        }
-
+    // use LaunchedEffect when state will perform some action (side effect) not UI rendering
     LaunchedEffect(Unit) {
         viewModel.saveState.collectLatest { state ->
             when (state) {
                 is UIState.Success -> {
-                    Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show()
+                    showSnackBar(
+                        SnackBarEvent(
+                            message = context.getString(R.string.message_recipe_save_successful),
+                        ))
+                    performExit()
                 }
                 is UIState.Error -> {
-                    Toast.makeText(
-                        context,
-                        "Error: ${state.cause.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Log.e(TAG,"recipe save error", state.cause)
+                    showSnackBar(
+                        SnackBarEvent(
+                            message = context.getString(R.string.message_recipe_save_error),
+                        ))
                 }
                 else -> Unit
             }
         }
     }
-
-    RecipeInputScreen(
-//        coverPhoto = coverPhoto,
-//        onCoverPhotoClick = {
-//            if (coverPhoto == null) {
-//                // First time → directly open picker
-//                pickCoverPhotoLauncher.launch("image/*")
-//            } else {
-//                // Image already exists → ask user
-//                showCoverPhotoDialog = true
-//            }
-//        },
-//        medias = medias,
-//        onAddMedia = {
-//            if (medias.size < 10) {
-//                val request = PickVisualMediaRequest(
-//                    mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
-//                    maxItems = MAX_RECIPE_MEDIAS - medias.size
-//                )
-//                pickMediaLauncher.launch(request)
-//            }
-//        },
-//        onRemoveMedia = { uri ->
-//            medias.remove(uri)
-//        },
-//        onMediaClick = { selectedMedia = it },
-        onSaveRecipe = { recipe ->
-            viewModel.add(recipe)
-//            viewModel.add(
-//                recipe.copy(
-//                    coverPhoto = coverPhoto,
-//                    medias = medias.map { it.toRecipeMedia() }
-//                )
-//            )
-        }
-    )
-
-//    // -------- Dialog --------
-//    if (showCoverPhotoDialog) {
-//        AlertDialog(
-//            onDismissRequest = { showCoverPhotoDialog = false },
-//            title = { Text("Cover photo") },
-//            text = { Text("What would you like to do?") },
-//            confirmButton = {
-//                TextButton(
-//                    onClick = {
-//                        showCoverPhotoDialog = false
-//                        pickCoverPhotoLauncher.launch("image/*")
-//                    }
-//                ) {
-//                    Text("Pick new")
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(
-//                    onClick = {
-//                        coverPhoto = null
-//                        showCoverPhotoDialog = false
-//                    }
-//                ) {
-//                    Text("Remove")
-//                }
-//            }
-//        )
-//    }
-//
-//    // -------- Media Caption BootSheet --------
-//    if (selectedMedia != null) {
-//        MediaCaptionBottomSheet(
-//            media = selectedMedia!!,
-//            onDismiss = { selectedMedia = null },
-//            onSave = { updated ->
-//                val index = medias.indexOfFirst { it.data == updated.data }
-//                if (index != -1) {
-//                    medias[index] = updated
-//                }
-//                selectedMedia = null
-//            }
-//        )
-//    }
 }
 
 @Composable
-fun EditRecipeRout(id: String) {
+fun CreateRecipeRoute(updateTopBar: TopBackCallback,
+                      showSnackBar: SnackBarCallback,
+                      performExit: ()-> Unit) {
     val viewModel = viewModel<InputRecipeViewModel>()
-    val context = LocalContext.current
 
-//    LaunchedEffect(Unit) {
-//        viewModel.saveState.collectLatest { state ->
-//            when (state) {
-//                is UIState.Success -> {
-//                    Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show()
-//                }
-//                is UIState.Error -> {
-//                    Toast.makeText(
-//                        context,
-//                        "Error: ${state.cause.message}",
-//                        Toast.LENGTH_LONG
-//                    ).show()
-//                }
-//                else -> Unit
-//            }
-//        }
-//    }
+    HandleRecipeSaveState(
+        viewModel = viewModel,
+        showSnackBar = showSnackBar,
+        performExit = performExit,
+    )
+
+    RecipeInputScreen(
+        appTitle = "New Recipe",
+        onSaveRecipe = { viewModel.add(it) },
+        updateTopBar = updateTopBar
+    )
+}
+
+@Composable
+fun EditRecipeRout(id: String,
+                   updateTopBar: TopBackCallback,
+                   showSnackBar: SnackBarCallback,
+                   performExit: ()-> Unit) {
+    val viewModel = viewModel<InputRecipeViewModel>()
 
     LaunchedEffect(id) {
         viewModel.findRecipeById(id)
     }
 
+    HandleRecipeSaveState(
+        viewModel = viewModel,
+        showSnackBar = showSnackBar,
+        performExit = performExit,
+    )
+
+    // use collectAsState or its siblings like below when state will only re-render the ui
     val recipeState by viewModel.recipeState.collectAsStateWithLifecycle()
     when(recipeState) {
         is UIState.Loading -> {
 
         }
         is UIState.Success<Recipe> -> {
-            Log.d("InputRecipeActivity", "recipe loaded")
             RecipeInputScreen(
+                appTitle = stringResource(R.string.app_title_edit_recipe),
                 initialRecipe = (recipeState as UIState.Success<Recipe>).data,
-                onSaveRecipe = { viewModel.edit(it) }
+                onSaveRecipe = { viewModel.edit(it) },
+                updateTopBar = updateTopBar
             )
             }
-        is UIState.NotFound -> {}
-        is UIState.Error -> {}
-        else -> {}
-    }
-
-    val saveState by viewModel.saveState.collectAsStateWithLifecycle(UIState.Idle())
-    when(saveState) {
-        is UIState.Loading -> {}
-        is UIState.Success -> {
-            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show()
+        is UIState.NotFound -> {
+            showSnackBar(
+                SnackBarEvent(
+                    message = stringResource(R.string.message_recipe_not_found)
+                )
+            )
+            performExit()
         }
         is UIState.Error -> {
-            Toast.makeText(
-                context,
-                "Error: ${(saveState as UIState.Error).cause.message}",
-                Toast.LENGTH_LONG
-            ).show()
+            performExit()
         }
         else -> {}
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeInputScreen(
+    appTitle: String,
     modifier: Modifier = Modifier,
     initialRecipe: Recipe? = null,
-    onSaveRecipe: (Recipe) -> Unit
+    onSaveRecipe: (Recipe) -> Unit,
+    updateTopBar: TopBackCallback,
 )
- {
+{
     var title by rememberSaveable { mutableStateOf("") }
     var note by rememberSaveable { mutableStateOf("") }
     var ingredients by rememberSaveable { mutableStateOf("") }
     var steps by rememberSaveable { mutableStateOf("") }
-
      var coverPhoto by rememberSaveable { mutableStateOf<Uri?>(null) }
      var showCoverPhotoDialog by remember { mutableStateOf(false) }
+    val medias = rememberSaveable { mutableStateListOf<RecipeMediaParcelable>() }
+    var selectedMedia by remember { mutableStateOf<RecipeMediaParcelable?>(null) }
 
-     val pickCoverPhotoLauncher =
-         rememberLauncherForActivityResult(
+     val pickCoverPhotoLauncher = rememberLauncherForActivityResult(
              contract = ActivityResultContracts.PickVisualMedia()
          ) { uri: Uri? ->
              // IMPORTANT: only update if user actually picked something
@@ -408,11 +283,7 @@ fun RecipeInputScreen(
              }
          }
 
-     val medias = rememberSaveable { mutableStateListOf<RecipeMediaParcelable>() }
-     var selectedMedia by remember { mutableStateOf<RecipeMediaParcelable?>(null) }
-
-     val pickMediaLauncher =
-         rememberLauncherForActivityResult(
+     val pickMediaLauncher = rememberLauncherForActivityResult(
              contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = MAX_RECIPE_MEDIAS)
          ) { uris ->
              val allowed = MAX_RECIPE_MEDIAS - medias.size
@@ -420,6 +291,32 @@ fun RecipeInputScreen(
                  medias.add(RecipeMediaParcelable(data = uri))
              }
          }
+
+    updateTopBar(
+        TopBarState(
+            title = appTitle,
+            actions = {
+                TextButton(
+                    enabled = title.isNotBlank(),
+                    onClick = {
+                        onSaveRecipe(
+                            Recipe(
+                                id = initialRecipe?.id ?: "",
+                                title = title,
+                                note = note,
+                                coverPhoto = coverPhoto,
+                                ingredients = ingredients,
+                                steps = steps,
+                                medias = medias.map { it.toRecipeMedia() }
+                            )
+                        )
+                    },
+                ) {
+                    Text(text = stringResource(R.string.label_save))
+                }
+            }
+        )
+    )
 
      LaunchedEffect(initialRecipe) {
          initialRecipe?.let { recipe ->
@@ -433,105 +330,65 @@ fun RecipeInputScreen(
          }
      }
 
-     Scaffold(
-         modifier = modifier,
-         topBar = {
-             TopAppBar(
-                 title = {
-                     Text(if (null == initialRecipe) "New Recipe" else "Edit Recipe")
-                 },
-                 actions = {
-                     TextButton(
-                         enabled = title.isNotBlank(),
-                         onClick = {
-                             onSaveRecipe(
-                                 Recipe(
-                                     id = initialRecipe?.id ?: "",
-                                     title = title.trim(),
-                                     coverPhoto = coverPhoto,
-                                     note = note.trim(),
-                                     ingredients = ingredients.trim(),
-                                     steps = steps.trim(),
-                                     medias = medias.map{ it.toRecipeMedia() }
-                                 )
-                             )
-                         }
-                     ) {
-                         Text("Save")
-                     }
+     Column(
+         modifier = modifier
+             .padding(16.dp)
+             .verticalScroll(rememberScrollState())
+     ) {
+
+         CoverPhotoInput(
+             coverPhoto = coverPhoto,
+             onClick = {
+                 if (null == coverPhoto) {
+                     val request = PickVisualMediaRequest(
+                         mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
+                     )
+                     pickCoverPhotoLauncher.launch(request)
                  }
-             )
-         },
-     ) { innerPadding ->
-
-         Box(
-             modifier = Modifier
-                 .padding(innerPadding)
-                 .fillMaxSize(),
-             contentAlignment = Alignment.TopCenter,
-         ) {
-             Column(
-                 modifier = modifier
-                     .padding(16.dp)
-                     .widthIn(max = 650.dp)
-                     .verticalScroll(rememberScrollState())
-             ) {
-
-                 CoverPhotoInput(
-                     coverPhoto = coverPhoto,
-                     onClick = {
-                         if (null == coverPhoto) {
-                             val request = PickVisualMediaRequest(
-                                 mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
-                             )
-                             pickCoverPhotoLauncher.launch(request)
-                         }
-                         else {
-                             showCoverPhotoDialog = true
-                         }
-                     }
-                 )
-
-                 Spacer(modifier = Modifier.height(24.dp))
-
-                 RecipeMediaInputSection(
-                     medias = medias,
-                     onAddMedia = {
-                         val request = PickVisualMediaRequest(
-                             mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
-                             maxItems = MAX_RECIPE_MEDIAS - medias.size
-                         )
-                         pickMediaLauncher.launch(request)
-                     },
-                     onRemoveMedia = { medias.remove(it) },
-                     onMediaClick = { selectedMedia = it }
-                 )
-
-                 Spacer(modifier = Modifier.height(24.dp))
-
-                 RecipeTextField(title, { title = it }, "Title")
-
-                 Spacer(modifier = Modifier.height(16.dp))
-
-                 RecipeTextField(note, { note = it }, "Description", 2, 3)
-
-                 Spacer(modifier = Modifier.height(24.dp))
-
-                 RecipeTextField(ingredients, { ingredients = it }, "Ingredients", 4)
-
-                 Spacer(modifier = Modifier.height(24.dp))
-
-                 RecipeTextField(steps, { steps = it }, "Directions", 6)
+                 else {
+                     showCoverPhotoDialog = true
+                 }
              }
-         }
+         )
+
+         Spacer(modifier = Modifier.height(24.dp))
+
+         RecipeMediaInputSection(
+             medias = medias,
+             onAddMedia = {
+                 val request = PickVisualMediaRequest(
+                     mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
+                     maxItems = MAX_RECIPE_MEDIAS - medias.size
+                 )
+                 pickMediaLauncher.launch(request)
+             },
+             onRemoveMedia = { medias.remove(it) },
+             onMediaClick = { selectedMedia = it }
+         )
+
+         Spacer(modifier = Modifier.height(24.dp))
+
+         RecipeTextField(title, { title = it }, stringResource(R.string.label_recipe_title))
+
+         Spacer(modifier = Modifier.height(16.dp))
+
+         RecipeTextField(note, { note = it }, stringResource(R.string.label_recipe_note), 2, 3)
+
+         Spacer(modifier = Modifier.height(24.dp))
+
+         RecipeTextField(ingredients, { ingredients = it }, stringResource(R.string.label_recipe_ingredients), 4)
+
+         Spacer(modifier = Modifier.height(24.dp))
+
+         RecipeTextField(steps, { steps = it }, stringResource(R.string.label_recipe_steps), 6)
      }
 
      // -------- Dialog --------
      if (showCoverPhotoDialog) {
          AlertDialog(
              onDismissRequest = { showCoverPhotoDialog = false },
-             title = { Text("Cover photo") },
-             text = { Text("What would you like to do?") },
+             title = { Text(stringResource(R.string.title_cover_photo_picker)) },
+             text = { Text(stringResource(R.string.message_cover_photo_picker)) },
              confirmButton = {
                  TextButton(
                      onClick = {
@@ -542,7 +399,7 @@ fun RecipeInputScreen(
                          pickCoverPhotoLauncher.launch(request)
                      }
                  ) {
-                     Text("Pick new")
+                     Text(stringResource(R.string.label_pick_new))
                  }
              },
              dismissButton = {
@@ -552,7 +409,7 @@ fun RecipeInputScreen(
                          showCoverPhotoDialog = false
                      }
                  ) {
-                     Text("Remove")
+                     Text(stringResource(R.string.label_remove))
                  }
              }
          )
@@ -611,7 +468,7 @@ fun CoverPhotoInput(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Add cover photo",
+                    text = stringResource(R.string.label_add_cover_photo),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -652,7 +509,7 @@ fun RecipeMediaInputSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "More photos (${medias.size}/${MAX_RECIPE_MEDIAS})",
+                text = stringResource(R.string.label_more_photos_with_progress, medias.size, MAX_RECIPE_MEDIAS),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
@@ -661,13 +518,13 @@ fun RecipeMediaInputSection(
                 onClick = onAddMedia,
                 enabled = medias.size < MAX_RECIPE_MEDIAS
             ) {
-                Text("Add")
+                Text(stringResource(R.string.label_add))
             }
         }
 
         if (medias.isEmpty()) {
             Text(
-                text = "You can add up to 10 photos",
+                text = stringResource(R.string.message_add_max_recipe_medias, MAX_RECIPE_MEDIAS),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -728,7 +585,7 @@ fun RecipeMediaInputItem(
 
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Remove",
+                contentDescription = stringResource(R.string.label_remove),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
@@ -765,7 +622,6 @@ data class RecipeMediaParcelable(
     val caption: String? = null,
     val id: String = "",
 ): Parcelable {
-
     fun toRecipeMedia(): RecipeMedia = RecipeMedia(data = data, caption = caption, id = id)
 }
 
@@ -794,7 +650,7 @@ fun MediaCaptionBottomSheet(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.label_cancel))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
@@ -802,7 +658,7 @@ fun MediaCaptionBottomSheet(
                         onSave(media.copy(caption = caption?.trim()))
                     }
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.label_save))
                 }
             }
 
@@ -822,7 +678,7 @@ fun MediaCaptionBottomSheet(
             OutlinedTextField(
                 value = caption ?: "",
                 onValueChange = { caption = it },
-                label = { Text("Caption") },
+                label = { Text(stringResource(R.string.label_caption)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 2
             )
@@ -830,14 +686,14 @@ fun MediaCaptionBottomSheet(
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
 fun RecipeInputScreenPreview() {
     RecipeBookTheme {
         RecipeInputScreen(
+            appTitle = stringResource(R.string.app_title_create_recipe),
             onSaveRecipe = {},
+            updateTopBar = {}
         )
     }
 }

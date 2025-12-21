@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">RecipeBook</string>
+
+    <string name="app_title_recipes_list">Recipes</string>
+    <string name="app_title_create_recipe">New Recipe</string>
+    <string name="app_title_edit_recipe">Edit Recipe</string>
+    <string name="app_title_view_recipe">Recipe Details</string>
+    <string name="title_cover_photo_picker">Cover Photo</string>
+    <string name="title_delete_recipe_warning">Delete Recipe</string>
+
+    <string name="label_recipe_title">Title</string>
+    <string name="label_recipe_note">Note</string>
+    <string name="label_recipe_ingredients">Ingredients</string>
+    <string name="label_recipe_steps">Steps</string>
+    <string name="label_yes">Yes</string>
+    <string name="label_no">No</string>
+    <string name="label_save">Save</string>
+    <string name="label_pick_new">Pick New</string>
+    <string name="label_remove">Remove</string>
+    <string name="label_add">Add</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_caption">Caption</string>
+    <string name="label_edit">Edit</string>
+    <string name="label_delete">Delete</string>
+    <string name="label_add_cover_photo">Add Cover Photo</string>
+    <string name="label_more_photos_with_progress">More photos %$1d/%$1d</string>
+
+    <string name="message_recipe_save_successful">Saved</string>
+    <string name="message_recipe_save_error">Something error occurred</string>
+    <string name="message_recipe_delete_successful">Deleted %s</string>
+    <string name="message_recipe_delete_error">Something error occurred</string>
+    <string name="message_recipe_not_found">Recipe not found</string>
+    <string name="message_cover_photo_picker">"What would you like to do?"</string>
+    <string name="message_add_max_recipe_medias">You can add up to %$1d photos</string>
+    <string name="message_delete_recipe_warning">Want to delete recipe %$1s</string>
 </resources>
