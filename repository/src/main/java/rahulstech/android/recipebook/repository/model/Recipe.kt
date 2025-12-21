@@ -6,8 +6,8 @@ data class Recipe(
     val id: String = "",
     val title: String,
     val coverPhoto: Uri? = null,
-    val note: String? = null,
-    val ingredients: String? = null,
-    val steps: String? = null,
+    val note: String = "",
+    val ingredients: String = "",
+    val steps: String = "",
     val medias: List<RecipeMedia> = emptyList(),
 )

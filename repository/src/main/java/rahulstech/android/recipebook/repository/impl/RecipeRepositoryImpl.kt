@@ -3,6 +3,7 @@ package rahulstech.android.recipebook.repository.impl
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import rahulstech.android.recipebook.repository.RecipeRepository
@@ -77,27 +78,39 @@ class RecipeRepositoryImpl: RecipeRepository {
         ),
     )
 
+    private val _recipesFlow by lazy {
+        MutableStateFlow(recipes.values.toList())
+    }
+
     override fun addRecipe(recipe: Recipe): Recipe {
-        val copy = recipe.copy(id = UUID.randomUUID().toString())
+        val medias = recipe.medias.map { it.copy(id = UUID.randomUUID().toString()) }
+        val copy = recipe.copy(id = UUID.randomUUID().toString(), medias = medias)
         recipes[copy.id] = copy
+        _recipesFlow.value = recipes.values.toList()
         return copy
     }
 
     override fun editRecipe(recipe: Recipe): Recipe? {
         if (recipes.containsKey(recipe.id)) {
             recipes[recipe.id] = recipe
+            _recipesFlow.value = recipes.values.toList()
             return recipe
         }
         return null
     }
 
     override fun getAllRecipes(): Flow<List<Recipe>> =
-        flowOf(recipes.values.toList())
-            .flowOn(Dispatchers.IO)
+        _recipesFlow
 
     override fun getRecipeById(id: String): Flow<Recipe?> =
         flowOf(recipes[id])
             .flowOn(Dispatchers.IO)
 
-    override fun deleteRecipe(recipe: Recipe): Boolean = recipes.remove(recipe.id, recipe)
+    override fun deleteRecipe(recipe: Recipe): Boolean {
+        if (recipes.remove(recipe.id, recipe)) {
+            _recipesFlow.value = recipes.values.toList()
+            return true
+        }
+        return false
+    }
 }

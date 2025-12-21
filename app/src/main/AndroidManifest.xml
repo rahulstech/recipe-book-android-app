@@ -24,6 +24,9 @@
 
         <activity android:name=".ui.ViewRecipeActivity"
             android:exported="false"/>
+
+        <activity android:name=".ui.InputRecipeActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>
