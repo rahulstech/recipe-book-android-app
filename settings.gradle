@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "RecipeBook"
 include ':app'
 include ':repository'
+include ':datasource:recipe-database'
