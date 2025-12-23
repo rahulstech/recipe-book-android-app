@@ -10,7 +10,7 @@ import androidx.room.RoomDatabase
     version = RecipeDatabase.DB_VERSION,
     exportSchema = true,
 )
-abstract class RecipeDatabase: RoomDatabase() {
+abstract class RecipeDatabase: IRecipeDatabase, RoomDatabase() {
 
     companion object {
 
@@ -23,6 +23,7 @@ abstract class RecipeDatabase: RoomDatabase() {
         }
     }
 
-    abstract val recipeDao: RecipeDao
-    abstract val recipeMediaDao: RecipeMediaDao
+    override fun runInTransaction(queries: () -> Unit) {
+        super<RoomDatabase>.runInTransaction(queries)
+    }
 }

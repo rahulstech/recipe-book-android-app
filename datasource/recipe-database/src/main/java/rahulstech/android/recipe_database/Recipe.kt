@@ -16,7 +16,7 @@ data class RecipeEntity(
     @PrimaryKey
     val id: String,
     val title: String,
-    val note: String,
+    val note: String? = null,
     val ingredients: String? = null,
     val steps: String? = null,
     val coverPhoto: String? = null,
@@ -25,8 +25,8 @@ data class RecipeEntity(
 data class RecipeItem(
     val id: String,
     val title: String,
-    val note: String,
-    val coverPhoto: String,
+    val note: String? = null,
+    val coverPhoto: String? = null,
 )
 
 @Dao
@@ -36,10 +36,10 @@ interface RecipeDao {
     fun insert(recipe: RecipeEntity)
 
     @Query("SELECT * FROM `recipes` WHERE `id` = :id")
-    fun findById(id: String): Flow<RecipeEntity?>
+    fun observeRecipeById(id: String): Flow<RecipeEntity?>
 
     @Query("SELECT `id`, `title`, `note`, `coverPhoto` FROM `recipes`")
-    fun getAllRecipes(): Flow<List<RecipeItem>>
+    fun observeAllRecipes(): Flow<List<RecipeItem>>
 
     @Update
     fun update(recipe: RecipeEntity)

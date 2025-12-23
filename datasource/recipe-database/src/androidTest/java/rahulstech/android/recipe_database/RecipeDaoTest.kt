@@ -37,9 +37,29 @@ class RecipeDaoTest {
 
         dao.insert(recipe)
 
-        val recipeFromDb = dao.findById(recipe.id).first()
+        val recipeFromDb = dao.observeRecipeById(recipe.id).first()
 
         assertEquals(recipe, recipeFromDb)
+    }
+
+    @Test
+    fun observeAllRecipesTest() = runBlocking {
+        val expected = listOf(
+            RecipeItem(
+                id = "recipe-1",
+                title = "title 1",
+                note = "note 1",
+            ),
+            RecipeItem(
+                id = "recipe-2",
+                title = "title 2",
+                note = "note 2",
+                coverPhoto = "cover-photo-1"
+            )
+        )
+        val actual = dao.observeAllRecipes().first()
+
+        assertEquals(expected,actual)
     }
 
     @Test
@@ -55,7 +75,7 @@ class RecipeDaoTest {
 
         dao.update(recipe)
 
-        val recipeFromDb = dao.findById(recipe.id).first()
+        val recipeFromDb = dao.observeRecipeById(recipe.id).first()
 
         assertEquals(recipe, recipeFromDb)
     }
@@ -70,7 +90,7 @@ class RecipeDaoTest {
 
         dao.delete(recipe)
 
-        val recipeFromDb = dao.findById(recipe.id).first()
+        val recipeFromDb = dao.observeRecipeById(recipe.id).first()
 
         assertNull(recipeFromDb)
     }

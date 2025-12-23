@@ -20,5 +20,8 @@ val FAKE_DATA_1 = object : RoomDatabase.Callback() {
         db.execSQL("INSERT INTO `recipes` (`id`,`title`,`note`) VALUES ('recipe-1','title 1','note 1')")
         db.execSQL("INSERT INTO `recipes` (`id`,`title`,`note`, `ingredients`, `steps`, `coverPhoto`)" +
                 " VALUES ('recipe-2','title 2','note 2','1. ingredient 1', '1. step1', 'cover-photo-1')")
+
+        db.execSQL("INSERT INTO `recipe_medias` (`id`,`recipeId`,`data`,`caption`) VALUES ('media-1', 'recipe-2', 'media-1-data', null)")
+        db.execSQL("INSERT INTO `recipe_medias` (`id`,`recipeId`,`data`,`caption`) VALUES ('media-2', 'recipe-2', 'media-2-data', 'caption')")
     }
 }

@@ -1,7 +1,6 @@
 package rahulstech.android.recipe_database
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
@@ -35,12 +34,15 @@ interface RecipeMediaDao {
     @Insert
     fun insertMultiple(medias: List<RecipeMediaEntity>)
 
+    @Query("SELECT * FROM `recipe_medias` WHERE `id` = :id")
+    fun observeMediaById(id: String): Flow<RecipeMediaEntity?>
+
     @Query("SELECT * FROM `recipe_medias` WHERE `recipeId` = :recipeId")
-    fun getMediasForRecipe(recipeId: String): Flow<List<RecipeMediaEntity>>
+    fun observeMediasForRecipe(recipeId: String): Flow<List<RecipeMediaEntity>>
 
     @Update
     fun updateMultiple(medias: List<RecipeMediaEntity>)
 
-    @Delete
-    fun deleteMultiple(medias: List<RecipeMediaEntity>)
+    @Query("DELETE FROM `recipe_medias` WHERE `id` IN(:mediaIds)")
+    fun deleteMultiple(mediaIds: List<String>)
 }
