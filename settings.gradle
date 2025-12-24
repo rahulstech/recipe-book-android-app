@@ -23,3 +23,4 @@ rootProject.name = "RecipeBook"
 include ':app'
 include ':repository'
 include ':datasource:recipe-database'
+include ':datasource:recipe-media-store'
