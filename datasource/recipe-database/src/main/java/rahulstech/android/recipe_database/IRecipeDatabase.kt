@@ -4,6 +4,8 @@ interface IRecipeDatabase {
 
     fun runInTransaction(queries: () -> Unit)
 
+    fun <V> runInTransaction(queries: () -> V): V
+
     val recipeDao: RecipeDao
 
     val recipeMediaDao: RecipeMediaDao

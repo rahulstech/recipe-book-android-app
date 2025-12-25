@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import java.util.concurrent.Callable
 
 @Database(
     entities = [RecipeEntity::class, RecipeMediaEntity::class],
@@ -25,5 +26,9 @@ abstract class RecipeDatabase: IRecipeDatabase, RoomDatabase() {
 
     override fun runInTransaction(queries: () -> Unit) {
         super<RoomDatabase>.runInTransaction(queries)
+    }
+
+    override fun <V> runInTransaction(queries: () -> V): V {
+        return super.runInTransaction(queries)
     }
 }

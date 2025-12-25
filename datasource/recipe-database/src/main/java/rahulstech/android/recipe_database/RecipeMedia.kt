@@ -1,6 +1,7 @@
 package rahulstech.android.recipe_database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
@@ -43,6 +44,6 @@ interface RecipeMediaDao {
     @Update
     fun updateMultiple(medias: List<RecipeMediaEntity>)
 
-    @Query("DELETE FROM `recipe_medias` WHERE `id` IN(:mediaIds)")
-    fun deleteMultiple(mediaIds: List<String>)
+    @Delete
+    fun deleteMultiple(mediaIds: List<RecipeMediaEntity>)
 }

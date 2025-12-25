@@ -82,7 +82,14 @@ class RecipeMediaTest {
 
     @Test
     fun deleteMultipleTest() = runBlocking{
-        dao.deleteMultiple(listOf("media-1"))
+        dao.deleteMultiple(listOf(
+            RecipeMediaEntity(
+                id = "media-1",
+                recipeId = "recipe-2",
+                data = "media-1-data",
+                caption = "caption added"
+            )
+        ))
         val media = dao.observeMediaById("media-1").first()
         assertNull(media)
     }
