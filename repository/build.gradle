@@ -30,6 +30,10 @@ android {
 }
 
 dependencies {
+
+    implementation project(':datasource:recipe-database')
+    implementation project(':datasource:recipe-media-store')
+
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material
