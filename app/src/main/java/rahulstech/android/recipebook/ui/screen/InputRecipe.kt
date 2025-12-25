@@ -1,5 +1,6 @@
 package rahulstech.android.recipebook.ui.screen
 
+import android.app.Application
 import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
@@ -55,7 +56,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -86,13 +88,13 @@ import rahulstech.android.recipebook.ui.UIState
 private const val MAX_RECIPE_MEDIAS = 10
 private const val TAG = "InputRecipe"
 
-class InputRecipeViewModel: ViewModel() {
+class InputRecipeViewModel(app: Application): AndroidViewModel(app) {
 
     companion object {
         private val TAG = InputRecipeViewModel::class.simpleName
     }
 
-    private val repo = Repositories.recipeRepository
+    private val repo = Repositories.getRepository(application)
 
     private val _saveState = MutableSharedFlow<UIState<Recipe>>(
         replay = 0,
@@ -113,7 +115,7 @@ class InputRecipeViewModel: ViewModel() {
         }
     }
 
-    private fun saveRecipe(action: ()->Recipe?) {
+    private fun saveRecipe(action: suspend ()->Recipe?) {
         Log.d(TAG, "saveRecipe")
         viewModelScope.launch(Dispatchers.IO) {
             _saveState.tryEmit(UIState.Loading())
@@ -562,7 +564,6 @@ fun RecipeMediaInputItem(
     Column(
         modifier = Modifier
             .width(120.dp)
-            .clip(shape = shape)
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.Start
     ) {
