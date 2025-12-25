@@ -1,5 +1,6 @@
 package rahulstech.android.recipebook.ui.screen
 
+import android.app.Application
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,7 +41,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,9 +70,9 @@ import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
 
-class ViewRecipeViewModel: ViewModel() {
+class ViewRecipeViewModel(app: Application): AndroidViewModel(app) {
 
-    private val repo = Repositories.recipeRepository
+    private val repo = Repositories.getRepository(application)
 
     private var _recipeState = MutableStateFlow<UIState<Recipe>>(UIState.Idle())
 
@@ -195,7 +198,7 @@ fun ViewRecipeRoute(id: String,
                                 showDeleteWarningDialog = false
                             }
                         ) {
-                            Text(stringResource(R.string.label_yes))
+                            Text(stringResource(R.string.label_no))
                         }
                     }
                 )

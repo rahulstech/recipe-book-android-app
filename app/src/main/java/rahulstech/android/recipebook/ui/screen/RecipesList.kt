@@ -1,5 +1,6 @@
 package rahulstech.android.recipebook.ui.screen
 
+import android.app.Application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +42,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,9 +58,9 @@ import rahulstech.android.recipebook.TopBarState
 import rahulstech.android.recipebook.repository.Repositories
 import rahulstech.android.recipebook.repository.model.Recipe
 
-class RecipesListViewModel: ViewModel() {
+class RecipesListViewModel(app: Application): AndroidViewModel(app) {
 
-    private val repo = Repositories.recipeRepository
+    private val repo = Repositories.getRepository(application)
 
     val recipes: StateFlow<List<Recipe>> by lazy {
         repo.getAllRecipes().stateIn(
