@@ -1,6 +1,5 @@
 package rahulstech.android.recipebook.ui.screen
 
-import android.app.Application
 import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
@@ -56,13 +55,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.application
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -80,21 +79,23 @@ import rahulstech.android.recipebook.SnackBarCallback
 import rahulstech.android.recipebook.SnackBarEvent
 import rahulstech.android.recipebook.TopBackCallback
 import rahulstech.android.recipebook.TopBarState
-import rahulstech.android.recipebook.repository.Repositories
+import rahulstech.android.recipebook.repository.RecipeRepository
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
+import javax.inject.Inject
 
 private const val MAX_RECIPE_MEDIAS = 10
 private const val TAG = "InputRecipe"
 
-class InputRecipeViewModel(app: Application): AndroidViewModel(app) {
+@HiltViewModel
+class InputRecipeViewModel @Inject constructor(
+    private val repo: RecipeRepository
+): ViewModel() {
 
     companion object {
         private val TAG = InputRecipeViewModel::class.simpleName
     }
-
-    private val repo = Repositories.getRepository(application)
 
     private val _saveState = MutableSharedFlow<UIState<Recipe>>(
         replay = 0,
@@ -196,7 +197,7 @@ private fun HandleRecipeSaveState(viewModel: InputRecipeViewModel,
 fun CreateRecipeRoute(updateTopBar: TopBackCallback,
                       showSnackBar: SnackBarCallback,
                       performExit: ()-> Unit) {
-    val viewModel = viewModel<InputRecipeViewModel>()
+    val viewModel: InputRecipeViewModel = hiltViewModel()
 
     HandleRecipeSaveState(
         viewModel = viewModel,
@@ -216,7 +217,7 @@ fun EditRecipeRout(id: String,
                    updateTopBar: TopBackCallback,
                    showSnackBar: SnackBarCallback,
                    performExit: ()-> Unit) {
-    val viewModel = viewModel<InputRecipeViewModel>()
+    val viewModel: InputRecipeViewModel = hiltViewModel()
 
     LaunchedEffect(id) {
         viewModel.findRecipeById(id)

@@ -19,8 +19,9 @@ import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.toRecipe
 import rahulstech.android.recipebook.repository.model.toRecipeMedia
 import java.util.UUID
+import javax.inject.Inject
 
-class RecipeRepositoryImpl(
+class RecipeRepositoryImpl @Inject constructor(
     val db: IRecipeDatabase,
     val store: RecipeMediaStore
 ): RecipeRepository {

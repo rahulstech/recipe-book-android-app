@@ -3,15 +3,17 @@ package rahulstech.android.recipe_media_store
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rahulstech.android.recipe_media_store.RecipeMediaStore.Companion.FILE_PROVIDER_AUTHORITY
 import java.io.File
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 
-class RecipeMediaStoreImpl(
-    val context: Context
+class RecipeMediaStoreImpl @Inject constructor(
+    @ApplicationContext val context: Context
 ): RecipeMediaStore {
 
     private val contentResolver = context.contentResolver

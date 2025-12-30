@@ -1,6 +1,5 @@
 package rahulstech.android.recipebook.ui.screen
 
-import android.app.Application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,25 +41,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.AndroidViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import rahulstech.android.recipebook.R
 import rahulstech.android.recipebook.TopBackCallback
 import rahulstech.android.recipebook.TopBarState
-import rahulstech.android.recipebook.repository.Repositories
+import rahulstech.android.recipebook.repository.RecipeRepository
 import rahulstech.android.recipebook.repository.model.Recipe
+import javax.inject.Inject
 
-class RecipesListViewModel(app: Application): AndroidViewModel(app) {
-
-    private val repo = Repositories.getRepository(application)
+@HiltViewModel
+class RecipesListViewModel @Inject constructor(
+    private val repo: RecipeRepository
+): ViewModel() {
 
     val recipes: StateFlow<List<Recipe>> by lazy {
         repo.getAllRecipes().stateIn(
@@ -76,7 +76,7 @@ fun RecipesListRoute(onRecipeItemClick: (Recipe) -> Unit,
                      onAddRecipeClick: ()-> Unit,
                      updateTopBar: TopBackCallback,
                      ) {
-    val viewModel: RecipesListViewModel = viewModel()
+    val viewModel: RecipesListViewModel = hiltViewModel()
     val recipes by viewModel.recipes.collectAsStateWithLifecycle()
 
     updateTopBar(

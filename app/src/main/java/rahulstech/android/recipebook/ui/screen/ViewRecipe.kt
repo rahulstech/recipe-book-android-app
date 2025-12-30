@@ -1,6 +1,5 @@
 package rahulstech.android.recipebook.ui.screen
 
-import android.app.Application
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,14 +40,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.lifecycle.AndroidViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -65,14 +63,16 @@ import rahulstech.android.recipebook.SnackBarCallback
 import rahulstech.android.recipebook.SnackBarEvent
 import rahulstech.android.recipebook.TopBackCallback
 import rahulstech.android.recipebook.TopBarState
-import rahulstech.android.recipebook.repository.Repositories
+import rahulstech.android.recipebook.repository.RecipeRepository
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
+import javax.inject.Inject
 
-class ViewRecipeViewModel(app: Application): AndroidViewModel(app) {
-
-    private val repo = Repositories.getRepository(application)
+@HiltViewModel
+class ViewRecipeViewModel @Inject constructor(
+    private val repo: RecipeRepository
+): ViewModel() {
 
     private var _recipeState = MutableStateFlow<UIState<Recipe>>(UIState.Idle())
 
@@ -121,7 +121,7 @@ fun ViewRecipeRoute(id: String,
                     updateTopBar: TopBackCallback,
                     showSnackBar: SnackBarCallback) {
 
-    val viewModel = viewModel<ViewRecipeViewModel>()
+    val viewModel: ViewRecipeViewModel = hiltViewModel()
     var showDeleteWarningDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(id) {
