@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -40,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -68,6 +70,8 @@ import rahulstech.android.recipebook.repository.RecipeRepository
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
+import rahulstech.android.recipebook.ui.theme.SimmerColor
+import rahulstech.android.recipebook.ui.toRoundPx
 import javax.inject.Inject
 
 @HiltViewModel
@@ -282,15 +286,18 @@ fun RecipeContentScreen(
 fun RecipeCoverImage(coverPhoto: Uri?) {
     val context = LocalContext.current
 
-    val request = remember(coverPhoto) {
+    val imageRequest = remember(coverPhoto) {
         ImageRequest.Builder(context)
             .data(coverPhoto)
             .crossfade(true)
+            .placeholder(SimmerColor.toArgb().toDrawable())
+            .fallback(R.mipmap.empty_image)
+            .error(R.mipmap.empty_image)
             .build()
     }
 
     AsyncImage(
-        model = request,
+        model = imageRequest,
         contentDescription = null,
         modifier = Modifier
             .fillMaxWidth()
@@ -348,17 +355,23 @@ fun RecipeMediaItem(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val sizeDp = 120.dp
+    val imageSizePx = sizeDp.toRoundPx()
 
     val request = remember(media.data) {
         ImageRequest.Builder(context)
             .data(media.data)
+            .size(imageSizePx)
             .crossfade(true)
+            .placeholder(SimmerColor.toArgb().toDrawable())
+            .fallback(R.mipmap.empty_image)
+            .error(R.mipmap.empty_image)
             .build()
     }
 
     Column(
         modifier = Modifier
-            .width(120.dp)
+            .width(sizeDp)
             .padding(8.dp)
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.Start
@@ -368,7 +381,7 @@ fun RecipeMediaItem(
             model = request,
             contentDescription = media.caption,
             modifier = Modifier
-                .size(120.dp)
+                .size(sizeDp)
                 .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Crop
         )

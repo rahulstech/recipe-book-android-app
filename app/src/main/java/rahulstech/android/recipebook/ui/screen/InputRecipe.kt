@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -56,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toDrawable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +87,8 @@ import rahulstech.android.recipebook.repository.RecipeRepository.Companion.MAX_R
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
+import rahulstech.android.recipebook.ui.theme.SimmerColor
+import rahulstech.android.recipebook.ui.toRoundPx
 import javax.inject.Inject
 
 private const val TAG = "InputRecipe"
@@ -275,7 +279,10 @@ fun RecipeInputScreen(
     var steps by rememberSaveable { mutableStateOf("") }
      var coverPhoto by rememberSaveable { mutableStateOf<Uri?>(null) }
      var showCoverPhotoDialog by remember { mutableStateOf(false) }
-    val medias = rememberSaveable { mutableStateListOf<RecipeMediaParcelable>() }
+    // don't use mutableStateListOf inside rememberSavable{ },
+    // because rememberSavable don't know how to parcelize MutableStateList
+    // Note: since medias is not rememberSaveable therefore it can not survive process death
+    val medias = remember { mutableStateListOf<RecipeMediaParcelable>() }
     var selectedMedia by remember { mutableStateOf<RecipeMediaParcelable?>(null) }
 
      val pickCoverPhotoLauncher = rememberLauncherForActivityResult(
@@ -446,6 +453,16 @@ fun CoverPhotoInput(
     val context = LocalContext.current
     val shape = RoundedCornerShape(16.dp)
 
+    val imageRequest = remember(coverPhoto) {
+        ImageRequest.Builder(context)
+            .data(coverPhoto)
+            .crossfade(true)
+            .placeholder(SimmerColor.toArgb().toDrawable())
+            .fallback(R.mipmap.empty_image)
+            .error(R.mipmap.empty_image)
+            .build()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -459,12 +476,8 @@ fun CoverPhotoInput(
 
         if (coverPhoto != null) {
             AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(coverPhoto)
-                    .crossfade(true)
-                    .build(),
+                model = imageRequest,
                 contentDescription = null,
-                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -567,27 +580,37 @@ fun RecipeMediaInputItem(
 ) {
     val context = LocalContext.current
     val shape = RoundedCornerShape(12.dp)
+    val sizeDp = 120.dp
+    val imageSizePx = sizeDp.toRoundPx()
+
+    val imageRequest = remember(media.data) {
+        ImageRequest.Builder(context)
+            .data(media.data)
+            .size(imageSizePx)
+            .crossfade(true)
+            .placeholder(SimmerColor.toArgb().toDrawable())
+            .fallback(R.mipmap.empty_image)
+            .error(R.mipmap.empty_image)
+            .build()
+    }
 
     Column(
         modifier = Modifier
-            .width(120.dp)
+            .width(sizeDp)
+            .clip(shape)
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.Start
     ) {
         Box(
             modifier = Modifier
-                .size(120.dp)
+                .size(sizeDp)
                 .clip(shape = shape)
                 .clickable(onClick = onClick)
         ) {
 
             AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(media.data)
-                    .crossfade(true)
-                    .build(),
+                model = imageRequest,
                 contentDescription = null,
-                modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop
             )
 
@@ -615,6 +638,7 @@ fun RecipeMediaInputItem(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
+                modifier = Modifier.padding(8.dp),
                 text = media.caption,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

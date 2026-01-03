@@ -31,9 +31,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -41,12 +44,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +62,7 @@ import rahulstech.android.recipebook.TopBackCallback
 import rahulstech.android.recipebook.TopBarState
 import rahulstech.android.recipebook.repository.RecipeRepository
 import rahulstech.android.recipebook.repository.model.Recipe
+import rahulstech.android.recipebook.ui.theme.SimmerColor
 import javax.inject.Inject
 
 @HiltViewModel
@@ -192,6 +199,18 @@ fun RecipeGridItem(
     recipe: Recipe,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val imageRequest = remember(recipe.coverPhoto) {
+        ImageRequest.Builder(context)
+            .data(recipe.coverPhoto)
+            .crossfade(true)
+            .lifecycle(lifecycleOwner.lifecycle)
+            .placeholder(SimmerColor.toArgb().toDrawable()) // show when loading
+            .fallback(R.mipmap.empty_image) // show when data == null
+            .error(R.mipmap.empty_image) // show when error loading
+            .build()
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,7 +221,7 @@ fun RecipeGridItem(
     ) {
         Column {
             AsyncImage(
-                model = recipe.coverPhoto,
+                model = imageRequest,
                 contentDescription = recipe.title,
                 modifier = Modifier
                     .fillMaxWidth()
