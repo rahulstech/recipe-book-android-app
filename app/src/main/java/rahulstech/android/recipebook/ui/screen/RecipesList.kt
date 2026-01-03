@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -108,6 +109,8 @@ fun RecipesListScreen(
             EmptyRecipeView()
         } else {
             LazyVerticalGrid(
+                modifier = Modifier
+                    .testTag("recipes_grid"),
                 state = gridState,
                 columns = GridCells.Adaptive(minSize = 200.dp),
                 contentPadding = PaddingValues(12.dp),
@@ -129,7 +132,8 @@ fun RecipesListScreen(
         Button(
             onClick = onAddRecipeClick,
             modifier = Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp),
+                .padding(bottom = 24.dp)
+                .testTag("button_add_recipe"),
             shape = RoundedCornerShape(50),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
         ) {
@@ -140,7 +144,7 @@ fun RecipesListScreen(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(text = "Add Recipe")
+            Text(text = stringResource(R.string.label_add_recipe))
         }
     }
 }
@@ -152,7 +156,8 @@ fun EmptyRecipeView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(24.dp)
+            .testTag("empty_view"), // composeTestRule use this tag to find this node during test
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -166,7 +171,7 @@ fun EmptyRecipeView(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "No recipes yet",
+            text = stringResource(R.string.label_empty_recipes_list),
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -190,7 +195,8 @@ fun RecipeGridItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .testTag("recipe_item_${recipe.id}"),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {

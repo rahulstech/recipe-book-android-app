@@ -24,6 +24,8 @@
     <string name="label_delete">Delete</string>
     <string name="label_add_cover_photo">Add Cover Photo</string>
     <string name="label_more_photos_with_progress">More photos %1$d/%2$d</string>
+    <string name="label_empty_recipes_list">No Recipes</string>
+    <string name="label_add_recipe">Add Recipe</string>
 
     <string name="message_recipe_save_successful">Saved</string>
     <string name="message_recipe_save_error">Something error occurred</string>

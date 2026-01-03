@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
@@ -119,9 +120,15 @@ fun ViewRecipeRoute(id: String,
                     onEditRecipeClick: (Recipe)-> Unit,
                     performExit: ()-> Unit,
                     updateTopBar: TopBackCallback,
-                    showSnackBar: SnackBarCallback) {
+                    showSnackBar: SnackBarCallback,
 
-    val viewModel: ViewRecipeViewModel = hiltViewModel()
+                    // production code will use Hilt created ViewModel;
+                    // but instrumentation test i can use an instance.
+                    // thus i am not hard-wired to hilt during instrumentation test
+                    viewModel: ViewRecipeViewModel = hiltViewModel()
+                    ) {
+
+    val context = LocalContext.current
     var showDeleteWarningDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(id) {
@@ -129,61 +136,66 @@ fun ViewRecipeRoute(id: String,
     }
 
     val deleteState by viewModel.deleteRecipeState.collectAsStateWithLifecycle(UIState.Idle())
-    when(deleteState) {
-        is UIState.Success<Recipe> -> {
-            val recipe = (deleteState as UIState.Success<Recipe>).data
-            showSnackBar(
-                SnackBarEvent(
-                    message = stringResource(R.string.message_recipe_delete_successful, recipe.title),
+    LaunchedEffect(deleteState) {
+        when(deleteState) {
+            is UIState.Success<Recipe> -> {
+                val recipe = (deleteState as UIState.Success<Recipe>).data
+                showSnackBar(
+                    SnackBarEvent(
+                        message = context.getString(R.string.message_recipe_delete_successful, recipe.title),
+                    )
                 )
-            )
-            performExit()
+                performExit()
+            }
+            else -> {}
         }
-        else -> {}
     }
 
     val recipeState by viewModel.recipeState.collectAsStateWithLifecycle()
-
-    updateTopBar(
-        TopBarState(
-            title = stringResource(R.string.app_title_view_recipe),
-            actions = {
-                if (recipeState is UIState.Success<Recipe>) {
-
-                    // edit recipe
-                    TextButton (
-                        onClick = {
-                            onEditRecipeClick((recipeState as UIState.Success<Recipe>).data)
-                        },
-                    ) {
-                        Text(stringResource(R.string.label_edit))
-                    }
-
-                    // delete recipe
-                    TextButton (
-                        onClick = {
-                            showDeleteWarningDialog = true
-                        },
-                    ) {
-                        Text(stringResource(R.string.label_delete))
-                    }
-                }
-            }
-        )
-    )
-
     when(recipeState) {
         is UIState.Success<Recipe> -> {
             val recipe = (recipeState as UIState.Success<Recipe>).data
+
+            // top bar
+            updateTopBar(
+                TopBarState(
+                    title = stringResource(R.string.app_title_view_recipe),
+                    actions = {
+                        // edit recipe
+                        TextButton (
+                            onClick = {
+                                onEditRecipeClick(recipe)
+                            },
+                            modifier = Modifier.testTag("menu_edit")
+                        ) {
+                            Text(stringResource(R.string.label_edit))
+                        }
+
+                        // delete recipe
+                        TextButton (
+                            onClick = {
+                                showDeleteWarningDialog = true
+                            },
+                            modifier = Modifier.testTag("menu_delete")
+                        ) {
+                            Text(stringResource(R.string.label_delete))
+                        }
+                    }
+                )
+            )
+
+            // content screen
             RecipeContentScreen(recipe  = recipe)
 
             if (showDeleteWarningDialog) {
                 AlertDialog(
+                    modifier = Modifier.testTag("recipe_delete_warning_dialog"),
                     onDismissRequest = { showDeleteWarningDialog = false },
                     title = { Text(stringResource(R.string.title_delete_recipe_warning)) },
                     text = { Text(stringResource(R.string.message_delete_recipe_warning, recipe.title)) },
                     dismissButton = {
                         TextButton(
+                            modifier = Modifier.testTag("recipe_delete_warning_dialog_yes_button"),
                             onClick = {
                                 showDeleteWarningDialog = false
                                 viewModel.removeRecipe(recipe)
@@ -204,7 +216,13 @@ fun ViewRecipeRoute(id: String,
                 )
             }
         }
-        else -> {}
+        else -> {
+            updateTopBar(
+                TopBarState(
+                    title = stringResource(R.string.app_title_view_recipe),
+                )
+            )
+        }
     }
 }
 
@@ -216,7 +234,8 @@ fun RecipeContentScreen(
     Column(
         modifier = modifier
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .testTag("recipe_content_screen"),
     ) {
 
         RecipeTitle(recipe.title)
@@ -225,38 +244,36 @@ fun RecipeContentScreen(
 
         RecipeCoverImage(recipe.coverPhoto)
 
-        Column {
+        if (recipe.note.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            RecipeNote(recipe.note)
+        }
 
-            if (recipe.note.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                RecipeNote(recipe.note)
-            }
+        if (recipe.medias.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            RecipeMediaSection(
+                medias = recipe.medias,
+                onMediaClick = { media ->
+                    // handle click (navigate / preview / fullscreen later)
+                }
+            )
+        }
 
-            if (recipe.medias.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                RecipeMediaSection(
-                    medias = recipe.medias,
-                    onMediaClick = { media ->
-                        // handle click (navigate / preview / fullscreen later)
-                    }
-                )
-            }
+        if (recipe.ingredients.isNotBlank()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            RecipeSection(
+                title = stringResource(R.string.label_recipe_ingredients),
+                content = recipe.ingredients,
+                modifier = Modifier.testTag("section_ingredients")
+            )
+        }
 
-            if (recipe.ingredients.isNotBlank()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                RecipeSection(
-                    title = stringResource(R.string.label_recipe_ingredients),
-                    content = recipe.ingredients
-                )
-            }
-
-            if (recipe.steps.isNotBlank()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                RecipeSection(
-                    title = stringResource(R.string.label_recipe_steps),
-                    content = recipe.steps
-                )
-            }
+        if (recipe.steps.isNotBlank()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            RecipeSection(
+                title = stringResource(R.string.label_recipe_steps),
+                content = recipe.steps
+            )
         }
     }
 }
@@ -308,6 +325,8 @@ fun RecipeMediaSection(
     onMediaClick: (RecipeMedia) -> Unit
 ) {
     LazyRow(
+        modifier = Modifier
+            .testTag("medias_row"),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -371,10 +390,11 @@ fun RecipeMediaItem(
 @Composable
 fun RecipeSection(
     title: String,
-    content: String
+    content: String,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,

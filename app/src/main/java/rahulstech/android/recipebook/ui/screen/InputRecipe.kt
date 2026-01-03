@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,12 +81,12 @@ import rahulstech.android.recipebook.SnackBarEvent
 import rahulstech.android.recipebook.TopBackCallback
 import rahulstech.android.recipebook.TopBarState
 import rahulstech.android.recipebook.repository.RecipeRepository
+import rahulstech.android.recipebook.repository.RecipeRepository.Companion.MAX_RECIPE_MEDIAS
 import rahulstech.android.recipebook.repository.model.Recipe
 import rahulstech.android.recipebook.repository.model.RecipeMedia
 import rahulstech.android.recipebook.ui.UIState
 import javax.inject.Inject
 
-private const val MAX_RECIPE_MEDIAS = 10
 private const val TAG = "InputRecipe"
 
 @HiltViewModel
@@ -196,8 +197,8 @@ private fun HandleRecipeSaveState(viewModel: InputRecipeViewModel,
 @Composable
 fun CreateRecipeRoute(updateTopBar: TopBackCallback,
                       showSnackBar: SnackBarCallback,
-                      performExit: ()-> Unit) {
-    val viewModel: InputRecipeViewModel = hiltViewModel()
+                      performExit: ()-> Unit,
+                      viewModel: InputRecipeViewModel = hiltViewModel()) {
 
     HandleRecipeSaveState(
         viewModel = viewModel,
@@ -216,8 +217,8 @@ fun CreateRecipeRoute(updateTopBar: TopBackCallback,
 fun EditRecipeRout(id: String,
                    updateTopBar: TopBackCallback,
                    showSnackBar: SnackBarCallback,
-                   performExit: ()-> Unit) {
-    val viewModel: InputRecipeViewModel = hiltViewModel()
+                   performExit: ()-> Unit,
+                   viewModel: InputRecipeViewModel = hiltViewModel()) {
 
     LaunchedEffect(id) {
         viewModel.findRecipeById(id)
@@ -233,7 +234,7 @@ fun EditRecipeRout(id: String,
     val recipeState by viewModel.recipeState.collectAsStateWithLifecycle()
     when(recipeState) {
         is UIState.Loading -> {
-
+            // TODO: show shimmer
         }
         is UIState.Success<Recipe> -> {
             RecipeInputScreen(
@@ -242,7 +243,7 @@ fun EditRecipeRout(id: String,
                 onSaveRecipe = { viewModel.edit(it) },
                 updateTopBar = updateTopBar
             )
-            }
+        }
         is UIState.NotFound -> {
             showSnackBar(
                 SnackBarEvent(
@@ -300,6 +301,7 @@ fun RecipeInputScreen(
             title = appTitle,
             actions = {
                 TextButton(
+                    modifier = Modifier.testTag("menu_save"),
                     enabled = title.isNotBlank(),
                     onClick = {
                         onSaveRecipe(
@@ -371,24 +373,25 @@ fun RecipeInputScreen(
 
          Spacer(modifier = Modifier.height(24.dp))
 
-         RecipeTextField(title, { title = it }, stringResource(R.string.label_recipe_title))
+         RecipeTextField(title, { title = it }, stringResource(R.string.label_recipe_title), testTag = "title_input")
 
          Spacer(modifier = Modifier.height(16.dp))
 
-         RecipeTextField(note, { note = it }, stringResource(R.string.label_recipe_note), 2, 3)
+         RecipeTextField(note, { note = it }, stringResource(R.string.label_recipe_note), 2, 3, testTag = "note_input")
 
          Spacer(modifier = Modifier.height(24.dp))
 
-         RecipeTextField(ingredients, { ingredients = it }, stringResource(R.string.label_recipe_ingredients), 4)
+         RecipeTextField(ingredients, { ingredients = it }, stringResource(R.string.label_recipe_ingredients), 4, testTag = "ingredients_input")
 
          Spacer(modifier = Modifier.height(24.dp))
 
-         RecipeTextField(steps, { steps = it }, stringResource(R.string.label_recipe_steps), 6)
+         RecipeTextField(steps, { steps = it }, stringResource(R.string.label_recipe_steps), 6, testTag = "steps_input")
      }
 
      // -------- Dialog --------
      if (showCoverPhotoDialog) {
          AlertDialog(
+             modifier = Modifier.testTag("cover_photo_picker_dialog"),
              onDismissRequest = { showCoverPhotoDialog = false },
              title = { Text(stringResource(R.string.title_cover_photo_picker)) },
              text = { Text(stringResource(R.string.message_cover_photo_picker)) },
@@ -449,7 +452,8 @@ fun CoverPhotoInput(
             .aspectRatio(16f / 9f)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .testTag("cover_photo"),
         contentAlignment = Alignment.Center
     ) {
 
@@ -486,12 +490,13 @@ fun RecipeTextField(
     onValueChange: (String) -> Unit,
     label: String,
     minLines: Int = 1,
-    maxLines: Int = Int.MAX_VALUE
+    maxLines: Int = Int.MAX_VALUE,
+    testTag: String = ""
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(testTag),
         label = { Text(label) },
         minLines = minLines,
         maxLines = maxLines
@@ -519,7 +524,8 @@ fun RecipeMediaInputSection(
 
             TextButton(
                 onClick = onAddMedia,
-                enabled = medias.size < MAX_RECIPE_MEDIAS
+                enabled = medias.size < MAX_RECIPE_MEDIAS,
+                modifier = Modifier.testTag("add_media_button")
             ) {
                 Text(stringResource(R.string.label_add))
             }
@@ -535,7 +541,7 @@ fun RecipeMediaInputSection(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyRow(
-                modifier = Modifier.padding(8.dp),
+                modifier = Modifier.padding(8.dp).testTag("media_list"),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(
@@ -599,7 +605,8 @@ fun RecipeMediaInputItem(
                     .pointerInput(Unit) {
                         detectTapGestures { onRemove() }
                     }
-                    .padding(4.dp),
+                    .padding(4.dp)
+                    .testTag("remove_media_button"),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }

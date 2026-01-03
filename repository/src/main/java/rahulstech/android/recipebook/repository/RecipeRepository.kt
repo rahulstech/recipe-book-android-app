@@ -5,6 +5,10 @@ import rahulstech.android.recipebook.repository.model.Recipe
 
 interface RecipeRepository {
 
+    companion object {
+        const val MAX_RECIPE_MEDIAS = 10
+    }
+
     suspend fun addRecipe(recipe: Recipe): Recipe
 
     suspend fun editRecipe(recipe: Recipe): Recipe?
