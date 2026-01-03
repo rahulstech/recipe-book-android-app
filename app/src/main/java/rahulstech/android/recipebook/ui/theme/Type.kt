@@ -1,4 +1,4 @@
-package rahulstech.android.dailyquotes.ui.theme
+package rahulstech.android.recipebook.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

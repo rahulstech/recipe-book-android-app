@@ -1,4 +1,4 @@
-package rahulstech.android.dailyquotes.ui.theme
+package rahulstech.android.recipebook.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
