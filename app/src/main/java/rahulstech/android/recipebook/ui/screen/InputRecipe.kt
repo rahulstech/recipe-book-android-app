@@ -76,7 +76,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
-import rahulstech.android.dailyquotes.ui.theme.RecipeBookTheme
+import rahulstech.android.recipebook.ui.theme.RecipeBookTheme
 import rahulstech.android.recipebook.R
 import rahulstech.android.recipebook.SnackBarCallback
 import rahulstech.android.recipebook.SnackBarEvent

@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -60,7 +62,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import rahulstech.android.dailyquotes.ui.theme.RecipeBookTheme
+import rahulstech.android.recipebook.ui.theme.RecipeBookTheme
 import rahulstech.android.recipebook.R
 import rahulstech.android.recipebook.SnackBarCallback
 import rahulstech.android.recipebook.SnackBarEvent
@@ -285,7 +287,7 @@ fun RecipeContentScreen(
 @Composable
 fun RecipeCoverImage(coverPhoto: Uri?) {
     val context = LocalContext.current
-
+    val shape = RoundedCornerShape(size = 32.dp)
     val imageRequest = remember(coverPhoto) {
         ImageRequest.Builder(context)
             .data(coverPhoto)
@@ -296,15 +298,20 @@ fun RecipeCoverImage(coverPhoto: Uri?) {
             .build()
     }
 
-    AsyncImage(
-        model = imageRequest,
-        contentDescription = null,
-        modifier = Modifier
-            .fillMaxWidth()
+    Box(
+        modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp)
             .aspectRatio(16f / 9f)
-            .clip(shape = RoundedCornerShape(size = 32.dp)),
-        contentScale = ContentScale.FillBounds
-    )
+            .clip(shape)
+            .testTag("cover_photo"),
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            model = imageRequest,
+            contentDescription = null,
+            modifier = Modifier.clip(shape),
+            contentScale = ContentScale.Crop
+        )
+    }
 }
 
 @Composable

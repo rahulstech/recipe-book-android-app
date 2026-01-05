@@ -26,8 +26,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -108,15 +110,33 @@ fun RecipesListScreen(
 ) {
     val gridState = rememberLazyGridState()
 
-    Box(
-        modifier = Modifier.widthIn(max = 650.dp).fillMaxHeight(),
-    ) {
+    Scaffold(
+        floatingActionButton = {
+            // FIXME: FAB not hiding on scroll
+            Button(
+                onClick = onAddRecipeClick,
+                modifier = Modifier.testTag("button_add_recipe"),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
 
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(text = stringResource(R.string.label_add_recipe))
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+    ){ innerPadding ->
         if (recipes.isEmpty()) {
-            EmptyRecipeView()
+            EmptyRecipeView(
+                modifier = Modifier.padding(innerPadding)
+            )
         } else {
             LazyVerticalGrid(
-                modifier = Modifier
+                modifier = Modifier.padding(innerPadding)
                     .testTag("recipes_grid"),
                 state = gridState,
                 columns = GridCells.Adaptive(minSize = 200.dp),
@@ -136,30 +156,14 @@ fun RecipesListScreen(
             }
         }
 
-        Button(
-            onClick = onAddRecipeClick,
-            modifier = Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
-                .testTag("button_add_recipe"),
-            shape = RoundedCornerShape(50),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null
-            )
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(text = stringResource(R.string.label_add_recipe))
-        }
     }
 }
 
 @Composable
-fun EmptyRecipeView(
-    modifier: Modifier = Modifier
-) {
+fun EmptyRecipeView(modifier: Modifier = Modifier
+                    )
+{
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -195,10 +199,9 @@ fun EmptyRecipeView(
 
 
 @Composable
-fun RecipeGridItem(
-    recipe: Recipe,
-    onClick: () -> Unit
-) {
+fun RecipeGridItem(recipe: Recipe,
+                   onClick: () -> Unit)
+{
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val imageRequest = remember(recipe.coverPhoto) {
