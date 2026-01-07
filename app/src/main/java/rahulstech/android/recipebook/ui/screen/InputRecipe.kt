@@ -36,6 +36,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -668,9 +669,11 @@ fun MediaCaptionBottomSheet(
     onSave: (RecipeMediaParcelable) -> Unit
 ) {
     var caption by rememberSaveable { mutableStateOf(media.caption) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
     ) {
         Column(
             modifier = Modifier
