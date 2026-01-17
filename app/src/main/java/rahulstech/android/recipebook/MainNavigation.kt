@@ -1,36 +1,26 @@
 package rahulstech.android.recipebook
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import android.os.Bundle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.integerResource
-import androidx.compose.ui.unit.dp
+import androidx.core.os.bundleOf
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import rahulstech.android.recipebook.ui.screen.CreateRecipeRoute
-import rahulstech.android.recipebook.ui.screen.EditRecipeRout
-import rahulstech.android.recipebook.ui.screen.RecipesListRoute
-import rahulstech.android.recipebook.ui.screen.ViewRecipeRoute
+import rahulstech.android.recipebook.ui.component.AppScaffold
+import rahulstech.android.recipebook.ui.component.ScaffoldState
+import rahulstech.android.recipebook.ui.component.ScaffoldStateCallback
+import rahulstech.android.recipebook.ui.screen.recipeinput.CreateRecipeRoute
+import rahulstech.android.recipebook.ui.screen.recipeinput.EditRecipeRout
+import rahulstech.android.recipebook.ui.screen.recipelist.RecipesListRoute
+import rahulstech.android.recipebook.ui.screen.viewrecipe.ViewRecipeRoute
+
 
 sealed class RecipeRoute(val route: String) {
     data object RecipesList : RecipeRoute("recipes_list")
@@ -46,66 +36,22 @@ sealed class RecipeRoute(val route: String) {
     }
 }
 
-typealias SnackBarCallback = (SnackBarEvent) -> Unit
+sealed interface NavigationEvent {
 
-data class TopBarState(
-    val title: String = "",
-    val actions: @Composable RowScope.()-> Unit = {}
-)
+    data class ForwardTo(val route: String): NavigationEvent
 
-typealias TopBackCallback = (TopBarState) -> Unit
+    data class Exit(val results: Bundle = bundleOf()): NavigationEvent
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RouteContent(modifier: Modifier = Modifier,
-                 content: @Composable (TopBackCallback, SnackBarCallback)->Unit
-                 ) {
-    var topBarState by remember { mutableStateOf(TopBarState()) }
-    var snackBarEvent by remember { mutableStateOf<SnackBarEvent?>(null) }
-    var snackBarHostState by remember { mutableStateOf(SnackbarHostState()) }
+typealias NavigationCallback = (NavigationEvent)-> Unit
 
-    LaunchedEffect(snackBarEvent) {
-        snackBarEvent?.let { event ->
-            snackBarHostState.showSnackbar(
-                message = event.message,
-                actionLabel = event.action?.label,
-                duration = event.duration
-            )
+fun handleNavigationEvent(navController: NavController, event: NavigationEvent) {
+    when(event) {
+        is NavigationEvent.ForwardTo -> {
+            navController.navigate(event.route)
         }
-    }
-
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackBarHostState) { data ->
-                Snackbar(data)
-            }
-        },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = topBarState.title
-                    )
-                },
-                actions = topBarState.actions
-            )
-        },
-
-    ) { innerPadding ->
-        Box(
-            modifier = modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .widthIn(max = integerResource(R.integer.max_content_width).dp)
-            ) {
-                content({ topBarState = it },
-                    { snackBarEvent = it }
-                )
-            }
+        is NavigationEvent.Exit -> {
+            navController.popBackStack()
         }
     }
 }
@@ -113,8 +59,11 @@ fun RouteContent(modifier: Modifier = Modifier,
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
+    var scaffoldState by remember { mutableStateOf(ScaffoldState()) }
+    val scaffoldStateCallback: ScaffoldStateCallback = { scaffoldState = it }
+    val navigationCallback: NavigationCallback = { handleNavigationEvent(navController, it) }
 
-    RouteContent { updateTopBar, showSnackBar ->
+    AppScaffold (scaffoldState, navigationCallback){ snackBarCallback ->
         NavHost(
             navController = navController,
             startDestination = RecipeRoute.RecipesList.route
@@ -124,17 +73,8 @@ fun MainNavigation() {
                 route =  RecipeRoute.RecipesList.route
             ) {
                 RecipesListRoute(
-                    onAddRecipeClick = {
-                        navController.navigate(
-                            RecipeRoute.CreateRecipe.route
-                        )
-                    },
-                    onRecipeItemClick = { recipe ->
-                        navController.navigate(
-                            RecipeRoute.ViewRecipe.create(recipe.id)
-                        )
-                    },
-                    updateTopBar = updateTopBar,
+                    navigationCallback = navigationCallback,
+                    scaffoldStateCallback = scaffoldStateCallback
                 )
             }
 
@@ -143,11 +83,9 @@ fun MainNavigation() {
                 route =  RecipeRoute.CreateRecipe.route
             ) {
                 CreateRecipeRoute(
-                    updateTopBar = updateTopBar,
-                    showSnackBar = showSnackBar,
-                    performExit = {
-                        navController.popBackStack()
-                    }
+                    navigationCallback = navigationCallback,
+                    snackBarCallback = snackBarCallback,
+                    scaffoldStateCallback = scaffoldStateCallback
                 )
             }
 
@@ -161,11 +99,9 @@ fun MainNavigation() {
                 val id = backstackEntry.arguments?.getString("id") ?: return@composable
                 EditRecipeRout(
                     id = id,
-                    updateTopBar = updateTopBar,
-                    showSnackBar = showSnackBar,
-                    performExit = {
-                        navController.popBackStack()
-                    }
+                    navigationCallback = navigationCallback,
+                    snackBarCallback = snackBarCallback,
+                    scaffoldStateCallback = scaffoldStateCallback
                 )
             }
 
@@ -179,19 +115,11 @@ fun MainNavigation() {
                 val id = backstackEntry.arguments?.getString("id") ?: return@composable
                 ViewRecipeRoute(
                     id = id,
-                    onEditRecipeClick = { recipe ->
-                        navController.navigate(
-                            RecipeRoute.EditRecipe.create(id)
-                        )
-                    },
-                    performExit = {
-                        navController.popBackStack()
-                    },
-                    updateTopBar =  updateTopBar,
-                    showSnackBar = showSnackBar,
+                    navigationCallback = navigationCallback,
+                    snackBarCallback = snackBarCallback,
+                    scaffoldStateCallback = scaffoldStateCallback
                 )
             }
         }
     }
 }
-

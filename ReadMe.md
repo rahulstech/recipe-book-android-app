@@ -25,6 +25,10 @@ See all images [here](./screenshots). Do check a working example on [Youtube](ht
 * ⚡ Smooth UI built with Jetpack Compose
 * ♻️ Efficient image loading and caching
 
+## Download Apk
+
+Browse all APK release versions [here](./apk)
+
 ## Tech Stack
 
 * **Language**: Kotlin

@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
 import org.junit.Rule
 import org.junit.Test
+import rahulstech.android.recipebook.ui.screen.viewrecipe.RecipeContentScreen
 
 class ViewRecipeContentScreenTest {
 

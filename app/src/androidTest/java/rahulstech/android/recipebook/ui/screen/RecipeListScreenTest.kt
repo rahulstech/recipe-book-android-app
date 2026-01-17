@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performScrollToNode
 import org.junit.Rule
 import org.junit.Test
 import rahulstech.android.recipebook.repository.model.Recipe
+import rahulstech.android.recipebook.ui.screen.recipelist.RecipesListScreen
 
 /**
  * IMPORT: keep the device screen on during test. if the following error encountered make sure
@@ -34,7 +35,7 @@ class RecipeListScreenTest {
     fun emptyState_isDisplayed_whenRecipesEmpty() {
         composeTestRule.setContent {
             RecipesListScreen(
-                recipes = emptyList(),
+                recipesState = emptyList(),
                 onRecipeClick = {},
                 onAddRecipeClick = {}
             )
@@ -55,7 +56,7 @@ class RecipeListScreenTest {
 
         composeTestRule.setContent {
             RecipesListScreen(
-                recipes = recipes,
+                recipesState = recipes,
                 onRecipeClick = {},
                 onAddRecipeClick = {}
             )
@@ -77,7 +78,7 @@ class RecipeListScreenTest {
 
         composeTestRule.setContent {
             RecipesListScreen(
-                recipes = recipes,
+                recipesState = recipes,
                 onRecipeClick = { clickedRecipe = it },
                 onAddRecipeClick = {}
             )
@@ -96,7 +97,7 @@ class RecipeListScreenTest {
 
         composeTestRule.setContent {
             RecipesListScreen(
-                recipes = emptyList(),
+                recipesState = emptyList(),
                 onRecipeClick = {},
                 onAddRecipeClick = { clicked = true }
             )
@@ -122,7 +123,7 @@ class RecipeListScreenTest {
 
         composeTestRule.setContent {
             RecipesListScreen(
-                recipes = recipes,
+                recipesState = recipes,
                 onRecipeClick = {},
                 onAddRecipeClick = {}
             )

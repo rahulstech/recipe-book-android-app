@@ -1,15 +1,32 @@
 package rahulstech.android.recipebook.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import rahulstech.android.recipebook.NavigationEvent
 
 @Composable
-fun Dp.toPx(): Float = with(LocalDensity.current) {
-    toPx()
+fun Dp.toRoundPx(): Int = with(LocalDensity.current) { roundToPx() }
+
+sealed interface UIState<out T> {
+
+    data object Idle: UIState<Nothing>
+
+    data object Loading: UIState<Nothing>
+
+    class Success<T>(val data: T): UIState<T>
+
+    class NotFound(): UIState<Nothing>
+
+    class Error(val cause: Throwable): UIState<Nothing>
 }
 
-@Composable
-fun Dp.toRoundPx(): Int = with(LocalDensity.current) {
-    roundToPx()
+sealed interface UIEffect {
+
+    data class ShowSnackBar(@StringRes val messageResId: Int, val args: List<Any> = emptyList(), val onAction: ()-> Unit = {}): UIEffect
+
+    data object Exit: UIEffect
+
+    data class NavigateTo(val event: NavigationEvent): UIEffect
 }

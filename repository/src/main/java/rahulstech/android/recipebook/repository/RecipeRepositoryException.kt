@@ -12,14 +12,14 @@ class RecipeRepositoryException(message: String? = null,
         fun errorGetMediaId(uri: Uri): RecipeRepositoryException =
             RecipeRepositoryException("can not get media id from media uri $uri")
 
-        fun addRecipeFail(recipe: Recipe): RecipeRepositoryException =
-            RecipeRepositoryException("fail to add recipe $recipe")
+        fun addRecipeFail(recipe: Recipe, cause: Throwable?): RecipeRepositoryException =
+            RecipeRepositoryException("fail to add recipe $recipe", cause)
 
-        fun editRecipeFail(recipe: Recipe): RecipeRepositoryException =
-            RecipeRepositoryException("fail to edit recipe $recipe")
+        fun editRecipeFail(recipe: Recipe, cause: Throwable?): RecipeRepositoryException =
+            RecipeRepositoryException("fail to edit recipe $recipe",cause)
 
-        fun deleteRecipeFail(recipe: Recipe): RecipeRepositoryException =
-            RecipeRepositoryException("fail to delete recipe $recipe")
+        fun deleteRecipeFail(recipe: Recipe, cause: Throwable?): RecipeRepositoryException =
+            RecipeRepositoryException("fail to delete recipe $recipe", cause)
     }
 }
 

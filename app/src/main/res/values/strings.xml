@@ -18,6 +18,7 @@
     <string name="label_pick_new">Pick New</string>
     <string name="label_remove">Remove</string>
     <string name="label_add">Add</string>
+    <string name="label_confirm">Confirm</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_caption">Caption</string>
     <string name="label_edit">Edit</string>
@@ -29,10 +30,14 @@
 
     <string name="message_recipe_save_successful">Saved</string>
     <string name="message_recipe_save_error">Something error occurred</string>
-    <string name="message_recipe_delete_successful">Deleted %s</string>
+    <string name="message_recipe_delete_successful">Recipe removed</string>
     <string name="message_recipe_delete_error">Something error occurred</string>
     <string name="message_recipe_not_found">Recipe not found</string>
     <string name="message_cover_photo_picker">"What would you like to do?"</string>
     <string name="message_add_max_recipe_medias">You can add up to %d photos</string>
-    <string name="message_delete_recipe_warning">Want to delete recipe %s</string>
+    <string name="message_delete_recipe_warning">Want to delete the recipe permanently?</string>
+
+    <string name="message_clear_text">clear text</string>
+    <string name="message_save_recipe">save recipe</string>
+    <string name="message_add_more_medias">add more medias</string>
 </resources>

@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.withTransaction
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import java.util.concurrent.Callable
 
 @Database(
@@ -24,11 +28,7 @@ abstract class RecipeDatabase: IRecipeDatabase, RoomDatabase() {
         }
     }
 
-    override fun runInTransaction(queries: () -> Unit) {
-        super<RoomDatabase>.runInTransaction(queries)
-    }
-
-    override fun <V> runInTransaction(queries: () -> V): V {
-        return super.runInTransaction(queries)
+    override suspend fun <V> runInTransaction(queries: suspend () -> V): V = coroutineScope {
+        withTransaction(queries)
     }
 }

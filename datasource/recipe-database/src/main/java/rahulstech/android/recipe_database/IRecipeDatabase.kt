@@ -2,9 +2,7 @@ package rahulstech.android.recipe_database
 
 interface IRecipeDatabase {
 
-    fun runInTransaction(queries: () -> Unit)
-
-    fun <V> runInTransaction(queries: () -> V): V
+    suspend fun <V> runInTransaction(queries: suspend () -> V): V
 
     val recipeDao: RecipeDao
 

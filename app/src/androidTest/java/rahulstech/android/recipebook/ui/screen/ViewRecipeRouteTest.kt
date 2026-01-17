@@ -11,8 +11,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import rahulstech.android.recipebook.RouteContent
-import rahulstech.android.recipebook.SnackBarEvent
+import rahulstech.android.recipebook.ui.component.SnackBarEvent
 import rahulstech.android.recipebook.TopBarState
+import rahulstech.android.recipebook.ui.screen.viewrecipe.ViewRecipeRoute
+import rahulstech.android.recipebook.ui.screen.viewrecipe.ViewRecipeViewModel
 
 class ViewRecipeRouteTest {
 
