@@ -53,10 +53,14 @@ class ViewRecipeViewModel @Inject constructor(private val repo: RecipeRepository
                 .catch { cause -> updateRecipeState(UIState.Error(cause)) }
                 .collectLatest { recipe ->
                     if (null == recipe) {
-                        sendSideEffect(UIEffect.ShowSnackBar(
-                            messageResId = R.string.message_recipe_not_found
-                        ))
-                        sendSideEffect(UIEffect.Exit)
+                        // following lines of code is dangerous. successful remove handles
+                        // exit screen itself. once delete this branch of if triggers two side effects
+                        // hence two consecutive Exit side effect is triggered. which causes the empty RecipesLis
+                        //sendSideEffect(UIEffect.ShowSnackBar(
+                        //    messageResId = R.string.message_recipe_not_found
+                        //))
+                        //sendSideEffect(UIEffect.Exit)
+                        updateRecipeState(UIState.NotFound)
                     }
                     else {
                         updateRecipeState(UIState.Success(recipe))

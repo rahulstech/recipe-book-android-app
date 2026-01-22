@@ -16,6 +16,10 @@ Users can add their own recipes, attach images, and view them anytime without ne
 
 See all images [here](./screenshots). Do check a working example on [Youtube](https://youtube.com/shorts/9G0kU0Cs2wM)
 
+## Download Apk
+
+Browse all APK release versions [here](./apk)
+
 ## Features
 
 * 📖 View a list of saved recipes with images
@@ -24,10 +28,6 @@ See all images [here](./screenshots). Do check a working example on [Youtube](ht
 * 🗂️ Offline-first storage using local database
 * ⚡ Smooth UI built with Jetpack Compose
 * ♻️ Efficient image loading and caching
-
-## Download Apk
-
-Browse all APK release versions [here](./apk)
 
 ## Tech Stack
 

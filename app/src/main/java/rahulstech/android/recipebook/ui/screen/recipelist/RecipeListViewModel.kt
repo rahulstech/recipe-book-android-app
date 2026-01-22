@@ -29,14 +29,13 @@ class RecipesListViewModel @Inject constructor(private val repo: RecipeRepositor
                 .catch { _recipesState.value = UIState.Error(it) }
                 .collectLatest { list ->
                     _recipesState.value = UIState.Loading
-
                     delay(800)
 
-                    if (list.isEmpty()) {
-                        _recipesState.value = UIState.NotFound()
+                    _recipesState.value = if (list.isEmpty()) {
+                         UIState.NotFound
                     }
                     else {
-                        _recipesState.value = UIState.Success(list)
+                        UIState.Success(list)
                     }
                 }
         }

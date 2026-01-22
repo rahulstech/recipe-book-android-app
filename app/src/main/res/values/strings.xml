@@ -28,6 +28,7 @@
     <string name="label_empty_recipes_list">No Recipes</string>
     <string name="label_add_recipe">Add Recipe</string>
 
+    <string name="message_something_error_occurred">something error occurred</string>
     <string name="message_recipe_save_successful">Saved</string>
     <string name="message_recipe_save_error">Something error occurred</string>
     <string name="message_recipe_delete_successful">Recipe removed</string>

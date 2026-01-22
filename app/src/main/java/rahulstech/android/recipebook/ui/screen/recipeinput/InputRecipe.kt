@@ -296,7 +296,7 @@ fun RecipeInputContent(state: InputRecipeState,
                     pickMediaCallback()
                 },
                 onRemoveMedia = { onEvent(InputRecipeEvent.UpdateRecipeEvent(state.removeMedia(it))) },
-                onMediaClick = { onEvent(InputRecipeEvent.MediaClickEvent(it)) }
+                onEditMedia = { onEvent(InputRecipeEvent.MediaClickEvent(it)) }
             )
         }
 
@@ -421,7 +421,7 @@ fun RecipeTextField(value: String,
 fun RecipeMediaInputSection(medias: List<RecipeMedia>,
                             onAddMedia: () -> Unit,
                             onRemoveMedia: (RecipeMedia) -> Unit,
-                            onMediaClick: (RecipeMedia) -> Unit
+                            onEditMedia: (RecipeMedia) -> Unit
                             )
 {
     Column {
@@ -460,11 +460,11 @@ fun RecipeMediaInputSection(medias: List<RecipeMedia>,
                     modifier = Modifier.fillMaxWidth().testTag("media_list"),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = medias, key = { it.hashCode() }) { media ->
+                    items(items = medias, key = { it.id }) { media ->
                         RecipeMediaInputItem(
                             media = media,
                             onRemove = { onRemoveMedia(media) },
-                            onEdit = { onMediaClick(media) }
+                            onEdit = { onEditMedia(media) }
                         )
                     }
                 }
@@ -634,24 +634,29 @@ fun MediaCaptionBottomSheet(media: RecipeMedia,
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            AsyncImage(
-                model = media.data,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AsyncImage(
+                    model = media.data,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = caption,
-                onValueChange = { caption = it },
-                label = { Text(stringResource(R.string.label_caption)) },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 1
-            )
+                OutlinedTextField(
+                    value = caption,
+                    onValueChange = { caption = it },
+                    label = { Text(stringResource(R.string.label_caption)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
+                )
+            }
         }
     }
 }

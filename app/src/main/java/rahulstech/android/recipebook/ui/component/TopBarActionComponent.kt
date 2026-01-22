@@ -74,7 +74,7 @@ fun OverflowMenuComponent(actions: List<TopBarAction.OverflowAction>, onDismiss:
         onDismissRequest = onDismiss,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().sizeIn(maxWidth = 360.dp, maxHeight = 400.dp).padding(top = 16.dp)
+            modifier = Modifier.fillMaxWidth().sizeIn(maxWidth = 360.dp, minHeight = 100.dp, maxHeight = 400.dp).padding(top = 16.dp)
         ) {
             itemsIndexed(items = actions) { index, action ->
                 if (index > 0) {
@@ -94,7 +94,7 @@ fun OverflowMenuComponent(actions: List<TopBarAction.OverflowAction>, onDismiss:
 fun OverflowMenuItemComponent(text: String, enabled: Boolean = true, onClick: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxWidth().height(36.dp).padding(horizontal = 12.dp).clickable(enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.CenterStart
     ) {
         Text(text)
     }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -90,10 +89,10 @@ fun RecipesListScreen(recipesState: UIState<List<Recipe>>,
                       onRecipeClick: (Recipe) -> Unit,
                       )
 {
-    val gridState = rememberLazyGridState()
     LazyVerticalGrid(
-        modifier = Modifier.testTag("recipes_grid"),
-        state = gridState,
+        modifier = Modifier.fillMaxWidth()
+            .testTag("recipes_grid"),
+        state = rememberLazyGridState(),
         columns = GridCells.Adaptive(minSize = 200.dp),
         contentPadding = PaddingValues(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -108,7 +107,7 @@ fun RecipesListScreen(recipesState: UIState<List<Recipe>>,
 
             is UIState.Success -> {
                 items(items = recipesState.data, key = { it.id }) { recipe ->
-                    RecipeGridItem(recipe) { onRecipeClick(recipe) }
+                    RecipeGridItem(recipe, onClick = {onRecipeClick(recipe)})
                 }
             }
 
@@ -124,10 +123,9 @@ fun RecipesListScreen(recipesState: UIState<List<Recipe>>,
 }
 
 @Composable
-fun EmptyRecipeListComponent()
-{
+fun EmptyRecipeListComponent() {
     Column(
-        modifier = Modifier.fillMaxSize().height(480.dp).padding(24.dp)
+        modifier = Modifier.fillMaxWidth().height(480.dp).padding(24.dp)
             .testTag("empty_view"), // composeTestRule use this tag to find this node during test
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -157,6 +155,7 @@ fun EmptyRecipeListComponent()
         )
     }
 }
+
 
 @Composable
 fun RecipeGridItem(recipe: Recipe,
@@ -208,7 +207,8 @@ fun RecipeShimmerItem()
 {
     Box(
         modifier = Modifier
-            .size(width = 300.dp, height = 240.dp)
+            .fillMaxWidth()
+            .aspectRatio(1f)
             .clip(MaterialTheme.shapes.large)
             .shimmer()
     )

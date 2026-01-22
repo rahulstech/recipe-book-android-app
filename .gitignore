@@ -16,3 +16,4 @@
 local.properties
 !**/schemas
 /app-signing
+/app/release

@@ -93,7 +93,7 @@ class InputRecipeViewModel @Inject constructor(private val repo: RecipeRepositor
         viewModelScope.launch {
             try {
                 changeIsSaving(true)
-                val newRecipe = repo.addRecipe(recipe)
+                val newRecipe = repo.addRecipe(recipe.prepare())
                 sendSideEffect(UIEffect.ShowSnackBar(R.string.message_recipe_save_successful))
                 sendSideEffect(UIEffect.NavigateTo(NavigationEvent.Exit()))
                 sendSideEffect(UIEffect.NavigateTo(
@@ -112,7 +112,7 @@ class InputRecipeViewModel @Inject constructor(private val repo: RecipeRepositor
         viewModelScope.launch {
             try {
                 changeIsSaving(true)
-                repo.editRecipe(recipe)
+                repo.editRecipe(recipe.prepare())
                 sendSideEffect(UIEffect.ShowSnackBar(R.string.message_recipe_save_successful))
                 sendSideEffect(UIEffect.NavigateTo(NavigationEvent.Exit()))
             }

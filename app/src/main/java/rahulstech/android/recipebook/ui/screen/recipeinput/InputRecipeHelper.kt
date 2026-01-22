@@ -30,7 +30,7 @@ data class InputRecipeState(
     fun addMedias(uris: List<Uri>): Recipe {
         val allowed = MAX_RECIPE_MEDIAS - recipe.medias.size
         val medias = uris.take(allowed).map {
-            RecipeMedia(data = it)
+            RecipeMedia(id = createTemporaryId(), data = it)
         }
         val newMedias = recipe.medias + medias
         return recipe.copy(medias = newMedias)
@@ -38,7 +38,7 @@ data class InputRecipeState(
 
     fun editMedia(media: RecipeMedia): Recipe {
         val newMedias = recipe.medias.map { old ->
-            if (old.id == media.id) media else old
+            if (old.id == media.id) media.copy() else old
         }
         return  recipe.copy(medias = newMedias)
     }
@@ -62,3 +62,19 @@ sealed interface InputRecipeEvent {
 
     data object CoverPhotoClickEvent: InputRecipeEvent
 }
+
+fun createTemporaryId(): String = "TEMP-${UUID.randomUUID()}"
+
+fun RecipeMedia.isIdTemporary(): Boolean = id.startsWith("TEMP")
+
+fun Recipe.prepare(): Recipe =
+    copy(
+        medias = medias.map { media ->
+            if (media.isIdTemporary()) {
+                media.copy(id = "")
+            }
+            else {
+                media
+            }
+        }
+    )

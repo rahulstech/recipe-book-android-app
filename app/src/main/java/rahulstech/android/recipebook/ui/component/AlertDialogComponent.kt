@@ -16,6 +16,7 @@ fun YesNoDialog(onDismiss: ()-> Unit,
                 message: String = "",
                 actionYesLabel: String = stringResource(R.string.label_yes),
                 actionNoLabel: String = stringResource(R.string.label_no),
+                onClose: ()-> Unit = onDismiss
                 )
 {
     AlertDialog(
@@ -29,12 +30,18 @@ fun YesNoDialog(onDismiss: ()-> Unit,
             Text(message)
         },
         confirmButton = {
-            TextButton(onClick = onNo) {
+            TextButton(onClick = {
+                onClose()
+                onNo()
+            }) {
                 Text(actionNoLabel)
             }
         },
         dismissButton = {
-            TextButton(onClick = onYes) {
+            TextButton(onClick = {
+                onClose()
+                onYes()
+            }) {
                 Text(actionYesLabel)
             }
         }

@@ -1,6 +1,7 @@
 package rahulstech.android.recipebook.ui.screen.viewrecipe
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +64,8 @@ import rahulstech.android.recipebook.ui.component.YesNoDialog
 import rahulstech.android.recipebook.ui.component.shimmer
 import rahulstech.android.recipebook.ui.screen.rememberAppImageRequest
 
+private const val TAG = "ViewRecipe"
+
 @Composable
 fun ViewRecipeRoute(id: String,
                     navigationCallback: NavigationCallback,
@@ -97,33 +100,46 @@ fun ViewRecipeRoute(id: String,
     }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    scaffoldStateCallback(ScaffoldState(
-        title = state.currentRecipe?.title ?: "",
-        showTitleShimmer = state.isLoading,
-        showNavUpAction = true,
-        actions = listOf(
-            // edit
-            TopBarAction.IconAction(
-                icon = IconValue.VectorIconValue(Icons.Default.Edit),
-                enabled = state.isActionEnabled,
-                onClick = { navigationCallback(NavigationEvent.ForwardTo(RecipeRoute.EditRecipe.create(id))) },
-            ),
-
-            // delete
-            TopBarAction.OverflowAction(
-                stringResource(R.string.label_delete),
-                enabled = state.isActionEnabled,
-                onClick = { viewModel.showDeleteRecipeDialog() }
-            )
-        )
-    ))
-
     when(state.recipeState) {
+        is UIState.NotFound -> {
+            Log.i(TAG, "recipe with id $id not found")
+            snackBarCallback(SnackBarEvent(
+                message = stringResource(R.string.message_recipe_not_found)
+            ))
+            navigationCallback(NavigationEvent.Exit())
+        }
+        is UIState.Error -> {
+            Log.i(TAG, "error loading recipe with id $id", (state.recipeState as UIState.Error).cause)
+            snackBarCallback(SnackBarEvent(
+                message = stringResource(R.string.message_something_error_occurred)
+            ))
+            navigationCallback(NavigationEvent.Exit())
+        }
         is UIState.Loading -> {
             RecipeShimmer()
         }
         is UIState.Success -> {
+            scaffoldStateCallback(ScaffoldState(
+                title = state.currentRecipe?.title ?: "",
+                showTitleShimmer = state.isLoading,
+                showNavUpAction = true,
+                actions = listOf(
+                    // edit
+                    TopBarAction.IconAction(
+                        icon = IconValue.VectorIconValue(Icons.Default.Edit),
+                        enabled = state.isActionEnabled,
+                        onClick = { navigationCallback(NavigationEvent.ForwardTo(RecipeRoute.EditRecipe.create(id))) },
+                    ),
+
+                    // delete
+                    TopBarAction.OverflowAction(
+                        stringResource(R.string.label_delete),
+                        enabled = state.isActionEnabled,
+                        onClick = { viewModel.showDeleteRecipeDialog() }
+                    )
+                )
+            ))
+
             RecipeContent((state.recipeState as UIState.Success<Recipe>).data)
         }
         else -> {}

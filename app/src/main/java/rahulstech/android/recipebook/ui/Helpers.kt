@@ -15,11 +15,11 @@ sealed interface UIState<out T> {
 
     data object Loading: UIState<Nothing>
 
-    class Success<T>(val data: T): UIState<T>
+    data class Success<T>(val data: T): UIState<T>
 
-    class NotFound(): UIState<Nothing>
+    data object NotFound: UIState<Nothing>
 
-    class Error(val cause: Throwable): UIState<Nothing>
+    data class Error(val cause: Throwable): UIState<Nothing>
 }
 
 sealed interface UIEffect {
